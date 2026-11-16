@@ -102,6 +102,7 @@ fieldset.f{border:0;margin:0;padding:0}
 .seg span{display:block;text-align:center;border:1.5px solid var(--line);border-radius:12px;padding:10px 4px;background:var(--bg)}
 .seg input:checked+span{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
 .seg input:focus-visible+span{outline:3px solid var(--accent);outline-offset:2px}
+.f textarea{background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;width:100%;font-family:ui-monospace,monospace;font-size:16px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .err{color:var(--exam);font-size:14px;margin:0;min-height:1em}
 .acts{display:flex;gap:8px;flex-wrap:wrap}
@@ -232,6 +233,7 @@ function render(){
     if(cur!==null)v+='</ul></div>';
     if(fin.length)v+='<details><summary>اللي خلصتيه ('+fin.length+')</summary><ul class="list">'+fin.map(function(it){return rowHTML({it:it,kind:'main',done:true,why:esc(fDate(it.date))},'');}).join('')+'</ul></details>';
   }
+  v+='<button class="ghost" data-act="import" style="align-self:center">استيراد مواعيد</button>';
   v+='<p class="status">'+(storeChecked&&!store?'محفوظ على هذا الجهاز فقط.':'التغييرات تنحفظ تلقائياً.')+'</p>';
   document.getElementById('view').innerHTML=v;
 }
@@ -289,7 +291,11 @@ function shell(){
     '<label class="f"><span>ملاحظة (اختياري)</span><input type="text" id="f-note" maxlength="120" placeholder="المادة، القاعة، الفصول المطلوبة" autocomplete="off"></label>'+
     '<p class="err" id="f-err" role="alert"></p>'+
     '<div class="acts"><button type="submit" class="save">حفظ</button><button type="button" class="ghost" id="f-cancel">إلغاء</button><button type="button" class="ghost del" id="f-del" hidden>حذف</button></div>'+
-  '</form></div>';
+  '</form></div>'+
+  '<div class="ov" id="ov2"><form class="sheet" id="imp" novalidate><h2>استيراد مواعيد</h2>'+
+    '<label class="f"><span>الصقي النص هني</span><textarea id="i-text" rows="7" dir="ltr"></textarea></label>'+
+    '<p class="err" id="i-err" role="alert"></p>'+
+    '<div class="acts"><button type="submit" class="save">إضافة</button><button type="button" class="ghost" id="i-cancel">إلغاء</button></div></form></div>';
 
   document.getElementById('app').addEventListener('click',function(e){
     var el=e.target.closest('[data-act],[data-tab]');if(!el)return;
@@ -298,6 +304,7 @@ function shell(){
     if(a==='edit'&&it)openSheet(it);
     else if(a==='filter'){filter=el.dataset.f;render();}
     else if(a==='dismiss'&&it){dismissed[akey(it)]=1;try{localStorage.setItem(DKEY,JSON.stringify(dismissed));}catch(x){}render();}
+    else if(a==='import'){document.getElementById('i-text').value='';document.getElementById('i-err').textContent='';document.getElementById('ov2').classList.add('open');}
     else if(a==='clearex'){state.items=state.items.filter(function(i){return !i.ex;});save();}
   });
   document.getElementById('app').addEventListener('change',function(e){
@@ -310,6 +317,23 @@ function shell(){
   });
   document.getElementById('fab').addEventListener('click',function(){openSheet(null);});
   document.getElementById('f-cancel').addEventListener('click',closeSheet);
+  document.getElementById('i-cancel').addEventListener('click',function(){document.getElementById('ov2').classList.remove('open');});
+  document.getElementById('imp').addEventListener('submit',function(e){
+    e.preventDefault();
+    var raw=document.getElementById('i-text').value,err=document.getElementById('i-err'),arr;
+    try{arr=JSON.parse(raw.slice(raw.indexOf('['),raw.lastIndexOf(']')+1).replace(/[\u201c\u201d]/g,'"'));}
+    catch(x){err.textContent='النص مو صحيح. انسخيه كامل من أول [ لآخر ].';return;}
+    var n=0;
+    arr.forEach(function(o){
+      if(!o||!TYPES[o.type]||!o.title||!/^\d{4}-\d{2}-\d{2}$/.test(o.date))return;
+      var time=/^\d{2}:\d{2}$/.test(o.time||'')?o.time:'';
+      if(state.items.some(function(i){return i.type===o.type&&i.title===o.title&&i.date===o.date&&i.time===time;}))return;
+      var r=o.remind;r=(r===''||r==null||!RM[String(r)])?'':+r;
+      state.items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6)+n,type:o.type,title:String(o.title).slice(0,120),date:o.date,time:time,pr:[1,2,3].indexOf(+o.pr)>=0?+o.pr:2,remind:r,note:String(o.note||'').slice(0,120),done:false});n++;
+    });
+    if(!n){err.textContent='ما انضاف شي. يمكن المواعيد موجودة من قبل.';return;}
+    document.getElementById('ov2').classList.remove('open');save();
+  });
   document.getElementById('ov').addEventListener('click',function(e){if(e.target.id==='ov')closeSheet();});
   document.getElementById('f-del').addEventListener('click',function(){
     if(!delArmed){delArmed=true;this.textContent='أكيد؟ اضغطي مرة ثانية';return;}
