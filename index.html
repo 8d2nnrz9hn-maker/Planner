@@ -1,26 +1,26 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>مواعيدي وتسليماتي</title><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="مواعيدي"><meta name="theme-color" content="#6B2FA0"><link rel="apple-touch-icon" href="icon.png"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Reem+Kufi:wght@500;700&display=swap"><style id="css">
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Planner</title><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Planner"><meta name="theme-color" content="#F9DCE6"><link rel="apple-touch-icon" href="icon.png"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Reem+Kufi:wght@500;700&display=swap"><style id="css">
 /* Layout idea: one phone-width column; the day's ranked list is the page, with big kufic rank numerals as the only loud element. */
 :root{
-  --bg:#F4F1F6; --surface:#FFFFFF; --ink:#241A2B; --muted:#6F6478; --line:#E1DAE6;
-  --accent:#6B2FA0; --accent-ink:#FFFFFF; --soft:#EDE4F4;
-  --exam:#B3261E; --due:#9A5B00; --appt:#0B7A75; --task:#55606E;
+  --bg:#FCF4F6; --surface:#FFFFFF; --ink:#3B2630; --muted:#8B6E7B; --line:#F1DDE4;
+  --accent:#C24F7B; --accent-ink:#FFFFFF; --soft:#FBE4EC;
+  --exam:#C8414F; --due:#B07612; --appt:#2F8F84; --task:#8A7682;
   --display:"Reem Kufi","IBM Plex Sans Arabic",Tahoma,sans-serif;
   --body:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --bg:#17121B; --surface:#221B28; --ink:#EFE8F3; --muted:#A698B0; --line:#372C40;
-    --accent:#C59BEA; --accent-ink:#1B1220; --soft:#2E2338;
-    --exam:#FF8A80; --due:#F2B84B; --appt:#5FD0C8; --task:#A9B4C2;
+    --bg:#1F161A; --surface:#2A1F25; --ink:#F7EAF0; --muted:#C2A6B3; --line:#3E2D35;
+    --accent:#F2A7C1; --accent-ink:#2B1520; --soft:#3A2731;
+    --exam:#FF9A9A; --due:#F2C46B; --appt:#7FD6CB; --task:#C4B3BC;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#17121B; --surface:#221B28; --ink:#EFE8F3; --muted:#A698B0; --line:#372C40;
-  --accent:#C59BEA; --accent-ink:#1B1220; --soft:#2E2338;
-  --exam:#FF8A80; --due:#F2B84B; --appt:#5FD0C8; --task:#A9B4C2;
+  --bg:#1F161A; --surface:#2A1F25; --ink:#F7EAF0; --muted:#C2A6B3; --line:#3E2D35;
+  --accent:#F2A7C1; --accent-ink:#2B1520; --soft:#3A2731;
+  --exam:#FF9A9A; --due:#F2C46B; --appt:#7FD6CB; --task:#C4B3BC;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -32,6 +32,7 @@ button{cursor:pointer}
 #app{max-width:560px;margin:0 auto;padding:20px 16px 110px;display:flex;flex-direction:column;gap:18px}
 
 .hd{display:flex;flex-direction:column;gap:10px}
+.brand{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.06em;color:var(--accent);margin:0}
 .hd .day{font-family:var(--display);font-weight:700;font-size:34px;line-height:1.25;margin:0;text-wrap:balance}
 .hd .sub{color:var(--muted);font-size:14px;display:flex;flex-wrap:wrap;gap:4px 14px}
 .bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
@@ -114,7 +115,7 @@ fieldset.f{border:0;margin:0;padding:0}
 </style></head><body><div id="app"></div><script type="application/json" id="state">{"v":1,"updatedAt":1,"items":[]}</script><script id="js">
 (function(){
 'use strict';
-var KEY='planner-state-v1', DKEY='planner-dismissed-v1', TITLE='مواعيدي وتسليماتي';
+var KEY='planner-state-v1', DKEY='planner-dismissed-v1', TITLE='Planner';
 var FONTS='<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Reem+Kufi:wght@500;700&display=swap">';
 var TYPES={exam:'اختبار',due:'تسليم',appt:'موعد',task:'مهمة'};
 var TW={exam:25,due:20,appt:15,task:5};
@@ -193,7 +194,7 @@ function render(){
   var now=new Date(),t=dstr(now),rows=todayRows(now);
   var total=rows.length,done=rows.filter(function(r){return r.done;}).length;
   var ex=state.items.filter(function(i){return i.type==='exam'&&!i.done&&daysTo(i.date,now)>=0;}).sort(function(a,b){return at(a)-at(b);})[0];
-  var h='<h1 class="day">'+esc(fDate(t))+'</h1>'+
+  var h='<p class="brand" dir="ltr">Planner</p><h1 class="day">'+esc(fDate(t))+'</h1>'+
     '<div class="sub"><span>'+(total?'خلصتي '+done+' من '+total+' اليوم':'ما عندج شي مسجل لليوم')+'</span></div>'+
     '<div class="bar" role="img" aria-label="إنجاز اليوم"><i style="width:'+(total?Math.round(done/total*100):0)+'%"></i></div>';
   if(ex)h+='<div class="next"><span>أقرب اختبار<br><b>'+esc(ex.title)+'</b></span><span class="cd">'+when(daysTo(ex.date,now))+'</span></div>';
@@ -233,7 +234,7 @@ function render(){
     if(cur!==null)v+='</ul></div>';
     if(fin.length)v+='<details><summary>اللي خلصتيه ('+fin.length+')</summary><ul class="list">'+fin.map(function(it){return rowHTML({it:it,kind:'main',done:true,why:esc(fDate(it.date))},'');}).join('')+'</ul></details>';
   }
-  v+='<button class="ghost" data-act="import" style="align-self:center">استيراد مواعيد</button>';
+  v+='<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="ghost" data-act="import">استيراد مواعيد</button><button class="ghost" data-act="backup">نسخ احتياطي</button></div>';
   v+='<p class="status">'+(storeChecked&&!store?'محفوظ على هذا الجهاز فقط.':'التغييرات تنحفظ تلقائياً.')+'</p>';
   document.getElementById('view').innerHTML=v;
 }
@@ -295,7 +296,11 @@ function shell(){
   '<div class="ov" id="ov2"><form class="sheet" id="imp" novalidate><h2>استيراد مواعيد</h2>'+
     '<label class="f"><span>الصقي النص هني</span><textarea id="i-text" rows="7" dir="ltr"></textarea></label>'+
     '<p class="err" id="i-err" role="alert"></p>'+
-    '<div class="acts"><button type="submit" class="save">إضافة</button><button type="button" class="ghost" id="i-cancel">إلغاء</button></div></form></div>';
+    '<div class="acts"><button type="submit" class="save">إضافة</button><button type="button" class="ghost" id="i-cancel">إلغاء</button></div></form></div>'+
+  '<div class="ov" id="ov3"><div class="sheet"><h2>نسخ احتياطي</h2><p class="hint">انسخي هالنص واحفظيه في الملاحظات. ترجعين مواعيدج بلصقه في «استيراد مواعيد».</p>'+
+    '<label class="f"><span>مواعيدج</span><textarea id="b-text" rows="7" dir="ltr" readonly></textarea></label>'+
+    '<p class="hint" id="b-msg" role="status"></p>'+
+    '<div class="acts"><button type="button" class="save" id="b-copy">نسخ</button><button type="button" class="ghost" id="b-close">إغلاق</button></div></div></div>';
 
   document.getElementById('app').addEventListener('click',function(e){
     var el=e.target.closest('[data-act],[data-tab]');if(!el)return;
@@ -305,6 +310,10 @@ function shell(){
     else if(a==='filter'){filter=el.dataset.f;render();}
     else if(a==='dismiss'&&it){dismissed[akey(it)]=1;try{localStorage.setItem(DKEY,JSON.stringify(dismissed));}catch(x){}render();}
     else if(a==='import'){document.getElementById('i-text').value='';document.getElementById('i-err').textContent='';document.getElementById('ov2').classList.add('open');}
+    else if(a==='backup'){
+      var data=JSON.stringify(state.items.filter(function(i){return !i.ex;}).map(function(i){return{type:i.type,title:i.title,date:i.date,time:i.time,pr:i.pr,remind:i.remind,note:i.note||'',done:!!i.done};}));
+      document.getElementById('b-text').value=data;document.getElementById('b-msg').textContent='';document.getElementById('ov3').classList.add('open');
+    }
     else if(a==='clearex'){state.items=state.items.filter(function(i){return !i.ex;});save();}
   });
   document.getElementById('app').addEventListener('change',function(e){
@@ -317,6 +326,13 @@ function shell(){
   });
   document.getElementById('fab').addEventListener('click',function(){openSheet(null);});
   document.getElementById('f-cancel').addEventListener('click',closeSheet);
+  document.getElementById('b-close').addEventListener('click',function(){document.getElementById('ov3').classList.remove('open');});
+  document.getElementById('b-copy').addEventListener('click',function(){
+    var t=document.getElementById('b-text'),m=document.getElementById('b-msg');
+    function sel(){t.focus();t.select();t.setSelectionRange(0,t.value.length);}
+    try{navigator.clipboard.writeText(t.value).then(function(){m.textContent='انتسخ. الصقيه في الملاحظات.';},function(){sel();m.textContent='النص محدد، اضغطي عليه واختاري نسخ.';});}
+    catch(x){sel();m.textContent='النص محدد، اضغطي عليه واختاري نسخ.';}
+  });
   document.getElementById('i-cancel').addEventListener('click',function(){document.getElementById('ov2').classList.remove('open');});
   document.getElementById('imp').addEventListener('submit',function(e){
     e.preventDefault();
@@ -329,7 +345,7 @@ function shell(){
       var time=/^\d{2}:\d{2}$/.test(o.time||'')?o.time:'';
       if(state.items.some(function(i){return i.type===o.type&&i.title===o.title&&i.date===o.date&&i.time===time;}))return;
       var r=o.remind;r=(r===''||r==null||!RM[String(r)])?'':+r;
-      state.items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6)+n,type:o.type,title:String(o.title).slice(0,120),date:o.date,time:time,pr:[1,2,3].indexOf(+o.pr)>=0?+o.pr:2,remind:r,note:String(o.note||'').slice(0,120),done:false});n++;
+      state.items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6)+n,type:o.type,title:String(o.title).slice(0,120),date:o.date,time:time,pr:[1,2,3].indexOf(+o.pr)>=0?+o.pr:2,remind:r,note:String(o.note||'').slice(0,120),done:!!o.done});n++;
     });
     if(!n){err.textContent='ما انضاف شي. يمكن المواعيد موجودة من قبل.';return;}
     document.getElementById('ov2').classList.remove('open');save();
