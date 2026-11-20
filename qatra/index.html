@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>قطرة</title><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="قطرة"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#F5F8FC"><link rel="apple-touch-icon" href="icon.png"><link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F8FC;--card:#fff;--navy:#14324B;--muted:#6B7F92;--line:#DCE5EE;--blue:#2F6FDB;--cyan:#4FC3DC;--grey:#9AA6B2;--purple:#8E6BD8;--pink:#F2A7C3;--green:#3FA672;--amber:#E8913A;--red:#D9534F}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;background:var(--bg);color:var(--navy);font-size:15px;line-height:1.45}
+h1,h2,h3,.big{font-family:'IBM Plex Sans Arabic',sans-serif;font-weight:700}
+.app{max-width:480px;margin:0 auto;min-height:100vh;padding:env(safe-area-inset-top) 16px calc(96px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;gap:10px;padding:18px 0 12px}
+.logo{width:36px;height:36px;border-radius:12px;background:var(--blue);display:grid;place-items:center}
+header h1{font-size:20px}header small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:12px}
+.card h2{font-size:16px;margin-bottom:8px}
+.muted{color:var(--muted)}.small{font-size:13px}.tiny{font-size:12px}
+.row{display:flex;gap:10px;align-items:center}.between{justify-content:space-between}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--bg);border-radius:14px;padding:12px}.stat .big{font-size:22px}
+label{display:block;font-size:13px;font-weight:500;margin:10px 0 4px}
+input,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:12px;font:inherit;background:#fff;color:var(--navy)}
+input:focus{outline:2px solid var(--blue);border-color:transparent}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:14px;padding:12px 16px;font:600 15px 'IBM Plex Sans Arabic';cursor:pointer;background:var(--blue);color:#fff;width:100%}
+.btn.sec{background:#E9F0FB;color:var(--blue)}.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.btn.pink{background:var(--pink);color:var(--navy)}
+.btn:disabled{opacity:.5;cursor:default}
+.pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600}
+.dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center}
+nav .in{display:flex;max-width:480px;width:100%}
+nav button{flex:1;border:0;background:none;padding:10px 0 calc(14px + env(safe-area-inset-bottom));font:500 12px 'IBM Plex Sans Arabic';color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button.on{color:var(--blue)}nav svg{width:22px;height:22px}
+.scanbtn{width:52px;height:52px;margin-top:-22px;border-radius:50%;background:var(--pink);display:grid;place-items:center;box-shadow:0 4px 14px rgba(242,167,195,.6)}
+.preview{width:100%;border-radius:16px;max-height:320px;object-fit:contain;background:#1F2A36}
+.drop{border:2px dashed var(--line);border-radius:18px;padding:28px 16px;text-align:center;cursor:pointer;display:block}
+.alert{border-radius:16px;padding:12px 14px;margin-bottom:10px;font-size:14px}
+.alert.amber{background:#FDF1E4;color:#8A4B12}.alert.blue{background:#E9F0FB;color:#1D4E9E}.alert.green{background:#E6F5EC;color:#1F6B44}.alert.red{background:#FBE7E6;color:#8E2A27}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px 4px;border-bottom:1px solid var(--line);text-align:left}th{font-size:12px;color:var(--muted);font-weight:500}
+.bar{height:12px;border-radius:999px;background:var(--line);overflow:hidden}.bar>i{display:block;height:100%;background:var(--purple)}
+.spin{width:18px;height:18px;border:3px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:s 1s linear infinite}@keyframes s{to{transform:rotate(360deg)}}
+.hide{display:none!important}
+.modal{position:fixed;inset:0;background:rgba(20,50,75,.35);display:grid;place-items:center;padding:20px;z-index:9}
+.modal .card{max-width:420px;width:100%}
+.digits{font:700 34px Poppins;letter-spacing:2px}
+.tag{font-size:11px;font-weight:600;color:var(--purple);background:#F1ECFB;padding:2px 8px;border-radius:999px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 2C9 7 5 10.5 5 15a7 7 0 0 0 14 0c0-4.5-4-8-7-13z" fill="#fff"/></svg></div>
+    <h1>قطرة<small>مراقبة استهلاك الماء · جنوب سعد العبدالله</small></h1>
+    
+  </header>
+  <main id="view"></main>
+</div>
+<nav><div class="in">
+  <button data-v="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>الرئيسية</button>
+  <button data-v="compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>المقارنة</button>
+  <button data-v="scan"><span class="scanbtn"><svg viewBox="0 0 24 24" fill="none" stroke="#14324B" stroke-width="2"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.5"/></svg></span>تصوير</button>
+  <button data-v="reuse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c-3 4.5-6 7.5-6 11a6 6 0 0 0 12 0c0-3.5-3-6.5-6-11z"/><path d="M9 15a3 3 0 0 0 3 3"/></svg>إعادة الاستخدام</button>
+  <button data-v="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>المنزل</button>
+</div></nav>
+<div id="modal" class="modal hide"></div>
+
+<script>
+/* ---------- state ---------- */
+const DEFAULT = {
+  profile:null,
+  readings:[],            // {id,date:'YYYY-MM-DD',value:m3,source:'ai'|'manual',ai:number|null}
+  tariff:{tiers:[]},      // [{upTo:m3|null, rate:KD per m3}] — must be confirmed from MEW
+  reuse:{greyLpd:60, condLpd:20, irrLm2:5, washesWk:2, washL:150, tapsLpd:20}, // placeholders: replace with design values
+  remindDay:1
+};
+let S = JSON.parse(JSON.stringify(DEFAULT));
+let db=null, uid=null, view='home', pending=null, sampleFn=null, aiImages=false;
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=(n,d=1)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:0});
+const today=()=>new Date().toISOString().slice(0,10);
+const days=(a,b)=>Math.max(1,Math.round((new Date(b)-new Date(a))/864e5));
+const monthName=d=>new Date(d+'T00:00').toLocaleString('ar-KW-u-nu-latn',{month:'short'});
+
+function loadLocal(){try{const x=localStorage.getItem('qatra_ar');if(x)S=Object.assign(JSON.parse(JSON.stringify(DEFAULT)),JSON.parse(x));}catch(e){}}
+let saveT=null;
+function save(){
+  try{localStorage.setItem('qatra_ar',JSON.stringify(S));}catch(e){}
+  if(db&&uid){clearTimeout(saveT);saveT=setTimeout(()=>{db.collection('data/users/'+uid).doc('qatra').set({json:JSON.stringify(S),updated:Date.now()}).catch(()=>{});},400);}
+}
+
+/* ---------- calculations ---------- */
+function sorted(){return [...S.readings].sort((a,b)=>a.date.localeCompare(b.date)||a.value-b.value);}
+function periods(){
+  const r=sorted(),out=[];
+  for(let i=1;i<r.length;i++){const use=r[i].value-r[i-1].value,d=days(r[i-1].date,r[i].date);
+    out.push({from:r[i-1].date,to:r[i].date,use,days:d,lpd:use*1000/d});}
+  return out;
+}
+function monthly(){
+  const m={};for(const p of periods()){const k=p.to.slice(0,7);m[k]=(m[k]||0)+p.use;}
+  return Object.entries(m).sort().map(([k,v])=>({month:k,use:v}));
+}
+function status(){
+  const p=periods();if(p.length<2)return {c:'grey',label:'أضف قراءات أكثر',col:'var(--grey)'};
+  const last=p[p.length-1],prev=p.slice(0,-1),avg=prev.reduce((s,x)=>s+x.lpd,0)/prev.length;
+  const ratio=last.lpd/avg;
+  if(ratio<=1.1)return {c:'green',label:'طبيعي',col:'var(--green)',ratio,avg,last};
+  if(ratio<=1.3)return {c:'amber',label:'أعلى من المعتاد',col:'var(--amber)',ratio,avg,last};
+  return {c:'red',label:'زيادة غير معتادة',col:'var(--red)',ratio,avg,last};
+}
+function bill(m3){
+  const t=S.tariff.tiers.filter(x=>x.rate>0);if(!t.length||!(m3>0))return null;
+  let left=m3,prevCap=0,total=0;
+  for(const x of t){const cap=x.upTo>0?x.upTo:Infinity,band=Math.min(left,cap-prevCap);if(band>0){total+=band*x.rate;left-=band;}prevCap=cap;if(left<=0)break;}
+  return total;
+}
+function reuseCalc(){
+  const p=S.profile||{},R=S.reuse,res=+p.residents||0,area=+p.irrArea||0,cars=+p.cars||0;
+  const supply=res*R.greyLpd+R.condLpd;
+  const irr=area*R.irrLm2, wash=cars*R.washesWk*R.washL/7, taps=R.tapsLpd;
+  const demand=irr+wash+taps;
+  return {supply,irr,wash,taps,demand,share:demand?Math.min(1,supply/demand):0};
+}
+
+/* ---------- views ---------- */
+function render(){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
+  if(!S.profile&&view!=='settings'){view='onboard';}
+  ({onboard,home,history,scan,reuse,settings,compare})[view]();
+  window.scrollTo(0,0);
+}
+function go(v){view=v;render();}
+
+function onboard(){
+  $('#view').innerHTML=`
+  <div class="card"><h2>أهلاً بك في قطرة</h2>
+  <p class="muted small">تابع استهلاك بيتك من صورة العداد، واكتشف أي زيادة غير معتادة بوقت مبكر، وشوف كم تغطي المياه المعالجة من احتياجاتك الخارجية.</p></div>
+  <form class="card" id="f"><h2>بيانات المنزل</h2>${profileFields({})}
+  <button class="btn" style="margin-top:16px">ابدأ</button>
+  <button type="button" class="btn ghost" id="demo" style="margin-top:8px">جرّب ببيانات تجريبية</button></form>`;
+  $('#f').onsubmit=e=>{e.preventDefault();S.profile=readProfile();save();go('home');};
+  $('#demo').onclick=loadDemo;
+}
+function profileFields(p){return `
+  <label>اسم المنزل</label><input name="name" value="${esc(p.name||'')}" placeholder="مثال: بيت العنزي" required>
+  <div class="grid2"><div><label>عدد السكان</label><input name="residents" type="number" min="1" value="${esc(p.residents||'')}" required></div>
+  <div><label>عدد السيارات</label><input name="cars" type="number" min="0" value="${esc(p.cars??'')}"></div></div>
+  <label>عدد الأدوار</label><select name="floors">${[1,2,3,4].map(n=>`<option value="${n}" ${(+p.floors||2)===n?'selected':''}>${n===4?'4 أو أكثر':n}</option>`).join('')}</select>
+  <label>مساحة الري (م²)</label><input name="irrArea" type="number" min="0" value="${esc(p.irrArea||'')}" placeholder="الحديقة والمساحات الخضراء">`;}
+function readProfile(){const f=new FormData($('#f'));return {name:f.get('name').trim(),residents:+f.get('residents')||1,cars:+f.get('cars')||0,irrArea:+f.get('irrArea')||0,floors:+f.get('floors')||2};}
+
+function chart(data){
+  if(!data.length)return '<p class="muted small">لا توجد بيانات شهرية بعد.</p>';
+  const d=data.slice(-6),max=Math.max(...d.map(x=>x.use))*1.15||1,W=320,H=150,bw=W/d.length;
+  const st=status();
+  return `<svg viewBox="0 0 ${W} ${H+28}" width="100%">${d.map((x,i)=>{const h=Math.max(2,x.use/max*H),last=i===d.length-1;
+    return `<rect x="${i*bw+bw*.2}" y="${H-h}" width="${bw*.6}" height="${h}" rx="7" fill="${last&&st.col?st.col:'#9DBAEB'}"/>
+    <text x="${i*bw+bw/2}" y="${H-h-6}" font-size="11" text-anchor="middle" fill="#14324B" font-family="Inter">${fmt(x.use,1)}</text>
+    <text x="${i*bw+bw/2}" y="${H+18}" font-size="11" text-anchor="middle" fill="#6B7F92" font-family="IBM Plex Sans Arabic">${monthName(x.month+'-01')}</text>`}).join('')}</svg>`;
+}
+
+function alerts(){
+  const out=[],st=status(),r=sorted();
+  if(st.c==='red'||st.c==='amber')out.push(`<div class="alert ${st.c==='red'?'red':'amber'}"><b>${st.label}:</b> معدل آخر فترة ${fmt(st.last.lpd,0)} لتر/يوم، أعلى بـ ${fmt((st.ratio-1)*100,0)}% من معدلك المعتاد ${fmt(st.avg,0)} لتر/يوم. هذا ممكن يدل على تسريب لكنه لا يؤكده. افحص الحنفيات والتانكي وخط الحديقة.</div>`);
+  if(r.length){const d=days(r[r.length-1].date,today());if(d>=30)out.push(`<div class="alert blue"><b>تذكير شهري:</b> آخر قراءة كانت قبل ${d} يوم. صوّر العداد عشان تستمر المتابعة.</div>`);}
+  else out.push(`<div class="alert blue"><b>أول خطوة:</b> صوّر العداد لتسجيل قراءة البداية.</div>`);
+  return out.join('');
+}
+
+function home(){
+  const p=periods(),st=status(),m=monthly(),lastM=m[m.length-1],b=lastM?bill(lastM.use):null,res=S.profile.residents||1;
+  const last=p[p.length-1];
+  $('#view').innerHTML=`
+  <p class="muted small" style="margin-bottom:8px">مرحباً، ${esc(S.profile.name)}</p>
+  ${alerts()}
+  <div class="card"><div class="row between"><h2>الفترة الحالية</h2><span class="pill" style="background:${st.col}22;color:${st.col}"><span class="dot" style="background:${st.col};width:8px;height:8px;margin-inline-end:6px"></span>${st.label}</span></div>
+  <div class="grid2" style="margin-top:6px">
+    <div class="stat"><div class="tiny muted">الاستهلاك</div><div class="big">${last?fmt(last.use,2):'–'} <span class="small">م³</span></div><div class="tiny muted">${last?last.days+' يوم':'يحتاج قراءتين'}</div></div>
+    <div class="stat"><div class="tiny muted">للشخص / يوم</div><div class="big">${last?fmt(last.lpd/res,0):'–'} <span class="small">لتر</span></div><div class="tiny muted">${res} أفراد</div></div>
+  </div></div>
+  <div class="card"><h2>الاستهلاك الشهري (م³)</h2>${chart(m)}</div>
+  <div class="card"><div class="row between"><h2>الفاتورة التقديرية</h2><span class="tag">تقديري</span></div>
+  ${b!=null?`<div class="big" style="font-size:26px">${fmt(b,3)} د.ك</div><p class="tiny muted">لـ ${fmt(lastM.use,2)} م³ في ${monthName(lastM.month+'-01')}، حسب التعرفة اللي أدخلتها. الفاتورة الرسمية تصدر من وزارة الكهرباء والماء.</p>`
+  :`<p class="small muted">أضف تعرفة وزارة الكهرباء والماء من صفحة المنزل عشان تشوف التقدير.</p>`}</div>
+  ${compareCard()}
+  <button class="btn pink" onclick="go('scan')">صوّر العداد</button>
+  <button class="btn ghost" style="margin-top:8px" onclick="go('history')">كل القراءات</button>`;
+}
+
+/* ---------- comparison with similar homes ----------
+   PEER DATA IS SIMULATED until real data (MEW records or app users) is connected.
+   Replace peerHomes() with the real dataset: [{residents, floors, lpd}] (household litres/day). */
+function rng(seed){let s=seed>>>0;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
+let _peers=null;
+function peerHomes(){
+  if(_peers)return _peers;const r=rng(2027),out=[];
+  for(let res=1;res<=14;res++)for(let fl=1;fl<=4;fl++)for(let i=0;i<30;i++){
+    const base=180+150*res+110*(fl-1);const z=Math.sqrt(-2*Math.log(r()+1e-9))*Math.cos(2*Math.PI*r());
+    out.push({residents:res,floors:fl,lpd:base*Math.exp(0.28*z)});}
+  return _peers=out;
+}
+function pctOf(arr,v){return arr.filter(x=>x<v).length/arr.length*100;}
+function median(a){const s=[...a].sort((x,y)=>x-y);return s[Math.floor(s.length/2)];}
+function compareData(){
+  const p=periods();if(p.length<1)return null;
+  const me=p[p.length-1].lpd,res=+S.profile.residents||1,fl=Math.min(4,+S.profile.floors||2);
+  const resBand=x=>Math.abs(x.residents-res)<=(res>=8?1:0);
+  const sim=peerHomes().filter(x=>resBand(x)&&x.floors===fl).map(x=>x.lpd);
+  const all=peerHomes().map(x=>x.lpd);
+  const pS=pctOf(sim,me),pA=pctOf(all,me),med=median(sim);
+  let verdict,tone,why;
+  if(pS<=60){tone='green';verdict='طبيعي لبيت مثل بيتك';
+    why=pA>70?'استهلاككم يبين عالي بس بسبب عدد الأفراد والأدوار. مقارنة ببيوت بنفس حجمكم، أنتم ضمن الطبيعي.':'استهلاككم متماشي مع البيوت المشابهة.';}
+  else if(pS<=85){tone='amber';verdict='أعلى شوي من البيوت المشابهة';why='البيوت اللي بنفس عدد الأفراد والأدوار تستهلك أقل بشوي. تغييرات بسيطة بالعادات أو أجهزة توفير تسد الفرق.';}
+  else{tone='red';verdict='أعلى من أغلب البيوت المشابهة';why='عدد الأفراد ما يفسر هالشي: أغلب البيوت مثل بيتك تستهلك أقل. الزيادة غالباً من العادات أو الاستخدام الخارجي أو تسريب.';}
+  return {me,res,fl,sim,all,pS,pA,med,verdict,tone,why,perPerson:me/res,medPerPerson:med/res};
+}
+function compareCard(){
+  const c=compareData();
+  if(!c)return `<div class="card"><h2>مقارنة بالبيوت المشابهة</h2><p class="small muted">أضف قراءتين عشان تقارن ببيوت مثل بيتك.</p></div>`;
+  const col={green:'var(--green)',amber:'var(--amber)',red:'var(--red)'}[c.tone];
+  return `<div class="card" onclick="go('compare')" style="cursor:pointer"><div class="row between"><h2>مقارنة بالبيوت المشابهة</h2><span class="tiny muted">‹</span></div>
+  <div class="row" style="gap:12px"><div class="big" style="font-size:30px;color:${col}">${fmt(c.pS,0)}<span class="small">%</span></div>
+  <div class="small"><b>${c.verdict}</b><br><span class="muted">ترتيبك المئوي بين بيوت فيها ${c.res} أفراد · ${c.fl===4?'4+':c.fl} أدوار</span></div></div></div>`;
+}
+
+const TIPS=[
+ {k:'leak',t:'اختبار التسريب بالليل',d:'اقرأ العداد بعد ما ينام الكل، ومرة ثانية قبل ما أحد يستخدم الماي. إذا الرقم تغير، فيه تسريب بمكان ما.',dev:false,eff:'مجاني',save:'عالي إذا فيه تسريب'},
+ {k:'leak',t:'اختبار الصبغة للسيفون',d:'حط كم قطرة صبغة طعام بخزان السيفون وانتظر 15 دقيقة بدون ما تسحب. إذا طلع لون بالكرسي، معناه السدادة تسرب.',dev:false,eff:'مجاني',save:'عالي إذا فيه تسريب'},
+ {k:'leak',t:'افحص عوامة التانكي',d:'إذا العوامة علقت، التانكي اللي فوق السطح يفيض بدون ما تحس. شوف إذا فيه ماي يطلع من ماسورة الفائض أو السطح مبلول.',dev:false,eff:'مجاني',save:'عالي إذا فيه تسريب'},
+ {k:'toilet',t:'بالون السيفون',d:'كيس أو قنينة مليانة داخل خزان السيفون تقلل كمية الماي بكل سحبة. لا تستخدم طابوق لأنه يتفتت.',dev:true,eff:'رخيص جداً',save:'متوسط'},
+ {k:'toilet',t:'طقم السيفون بدفعتين',d:'يحوّل السيفون الحالي لزرين: نص دفعة ودفعة كاملة.',dev:true,eff:'رخيص',save:'متوسط إلى عالي'},
+ {k:'tap',t:'مرشد الحنفيات (Aerator)',d:'ينركب على حنفيات المطبخ والحمام ويخلط الهوا مع الماي، فتحس بنفس قوة الماي بكمية أقل.',dev:true,eff:'رخيص',save:'متوسط'},
+ {k:'shower',t:'دش موفر',d:'يعطي رشة قوية بتدفق أقل. ويفرق أكثر لو قصرت وقت الشاور.',dev:true,eff:'رخيص',save:'عالي'},
+ {k:'outdoor',t:'ري بالتنقيط مع مؤقت',d:'يسقي الجذور مباشرة. شغله الصبح بدري أو بعد المغرب عشان يقل التبخر بحر الكويت.',dev:true,eff:'تكلفة متوسطة',save:'عالي'},
+ {k:'car',t:'غسيل السيارة بالسطل',d:'الهوز يظل شغال طول الغسلة. السطل والإسفنجة، أو الماي المعالج من شبكة إعادة الاستخدام، يوفر أغلبه.',dev:false,eff:'مجاني',save:'متوسط'},
+ {k:'laundry',t:'شغّل الغسالة وهي مليانة',d:'شغّل غسالة الملابس والصحون بس لما تكون مليانة، وعلى البرنامج الاقتصادي.',dev:false,eff:'مجاني',save:'منخفض إلى متوسط'},
+ {k:'outdoor',t:'استخدم ماي المكيف للزرع',d:'جمّع الماي اللي ينزل من المكيف بوعاء واسقي فيه الزرع بدال ما يروح.',dev:false,eff:'مجاني',save:'منخفض إلى متوسط'},
+];
+function tipOrder(c){
+  const r=reuseCalc(),pr={leak:5,toilet:3,shower:3,tap:2,outdoor:2,car:1,laundry:1};
+  if(c&&c.tone==='red'){pr.leak=10;}else if(c&&c.tone==='green'){pr.leak=1;}
+  if(r.irr>r.demand*0.5&&r.irr>0)pr.outdoor=6;
+  if(!(+S.profile.cars))pr.car=-99;
+  if(!(+S.profile.irrArea))pr.outdoor=Math.min(pr.outdoor,0);
+  return TIPS.filter(t=>pr[t.k]>-50).sort((a,b)=>pr[b.k]-pr[a.k]);
+}
+
+function compare(){
+  const c=compareData();
+  if(!c){$('#view').innerHTML=`<div class="card"><h2>المقارنة</h2><p class="small muted">صوّر العداد مرتين (مثلاً بداية الشهر ونهايته) عشان تشوف بيتك مقارنة ببيوت مثله.</p></div>${tipsHtml(null)}`;return;}
+  const col={green:'var(--green)',amber:'var(--amber)',red:'var(--red)'}[c.tone];
+  const lo=Math.min(...c.sim,c.me)*0.9,hi=Math.max(...c.sim,c.me)*1.05,X=v=>20+(v-lo)/(hi-lo)*300;
+  const dots=c.sim.map((v,i)=>`<circle cx="${X(v)}" cy="${40+(i%5)*9}" r="4" fill="#B9C7D4"/>`).join('');
+  $('#view').innerHTML=`
+  <div class="card"><h2>بيوت مثل بيتك</h2>
+  <p class="tiny muted">${c.res} أفراد · ${c.fl===4?'4 أو أكثر':c.fl} أدوار · ${c.sim.length} بيت</p>
+  <svg viewBox="0 0 340 120" width="100%">${dots}
+   <line x1="${X(c.med)}" y1="28" x2="${X(c.med)}" y2="92" stroke="#14324B" stroke-width="2" stroke-dasharray="4 3"/>
+   <text x="${X(c.med)}" y="108" font-size="10" text-anchor="middle" fill="#6B7F92" font-family="IBM Plex Sans Arabic">المعتاد ${fmt(c.med,0)} لتر/يوم</text>
+   <circle cx="${X(c.me)}" cy="58" r="9" fill="${col}" stroke="#fff" stroke-width="3"/>
+   <text x="${X(c.me)}" y="20" font-size="11" text-anchor="middle" fill="#14324B" font-weight="600" font-family="IBM Plex Sans Arabic">أنت ${fmt(c.me,0)}</text></svg>
+  <div class="alert ${c.tone==='green'?'green':c.tone==='amber'?'amber':'red'}" style="margin-top:6px"><b>${c.verdict}.</b> ${c.why}</div>
+  <div class="grid2">
+   <div class="stat"><div class="tiny muted">بيتك</div><div class="big">${fmt(c.me,0)} <span class="small">لتر/يوم</span></div><div class="tiny muted">${fmt(c.perPerson,0)} لتر للشخص</div></div>
+   <div class="stat"><div class="tiny muted">البيت المشابه المعتاد</div><div class="big">${fmt(c.med,0)} <span class="small">لتر/يوم</span></div><div class="tiny muted">${fmt(c.medPerPerson,0)} لتر للشخص</div></div>
+  </div>
+  <div class="row between small" style="margin-top:12px"><span>بين البيوت المشابهة</span><b>أعلى من ${fmt(c.pS,0)}% منها</b></div>
+  <div class="row between small" style="margin-top:4px"><span>بين كل البيوت</span><b>أعلى من ${fmt(c.pA,0)}% منها</b></div>
+  <p class="tiny muted" style="margin-top:10px">بيانات المقارنة تجريبية (محاكاة) لهذا النموذج. النسخة النهائية بتعتمد على سجلات حقيقية.</p></div>
+  ${tipsHtml(c)}`;
+}
+function tipsHtml(c){
+  return `<div class="card"><h2>شلون تقلل استهلاكك</h2><p class="tiny muted" style="margin-bottom:6px">مرتبة حسب بيتك.</p>
+  ${tipOrder(c).map(t=>`<div style="padding:10px 0;border-top:1px solid var(--line)"><div class="row between"><b class="small">${t.t}</b>${t.dev?'<span class="tag">جهاز</span>':''}</div>
+  <div class="small muted" style="margin:3px 0">${t.d}</div><div class="tiny muted">التكلفة: ${t.eff} · التوفير: ${t.save}</div></div>`).join('')}</div>`;
+}
+
+function history(){
+  const r=sorted().reverse();
+  $('#view').innerHTML=`<div class="card"><h2>القراءات</h2>
+  ${r.length?`<table><tr><th>التاريخ</th><th>القراءة (م³)</th><th>المصدر</th><th></th></tr>${r.map(x=>`<tr><td>${x.date}</td><td><b>${fmt(x.value,3)}</b></td><td class="tiny">${x.source==='ai'?(x.ai!=null&&x.ai!==x.value?'قراءة تلقائية، معدّلة':'قراءة تلقائية'):'يدوي'}</td><td><button class="btn ghost" style="padding:4px 8px;width:auto;font-size:12px" onclick="delR('${x.id}')">✕</button></td></tr>`).join('')}</table>`:'<p class="muted small">لا توجد قراءات بعد.</p>'}</div>
+  <div class="card"><h2>الفترات</h2>${periods().reverse().map(p=>`<div class="row between small" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>${p.from} ← ${p.to}</span><b>${fmt(p.use,2)} م³ · ${fmt(p.lpd,0)} لتر/يوم</b></div>`).join('')||'<p class="muted small">يحتاج قراءتين على الأقل.</p>'}</div>
+  <button class="btn sec" onclick="manual()">أضف قراءة يدوياً</button>`;
+}
+function delR(id){S.readings=S.readings.filter(x=>x.id!==id);save();render();}
+
+function scan(){
+  $('#view').innerHTML=`<div class="card"><h2>صوّر العداد</h2>
+  <p class="muted small" style="margin-bottom:12px">صوّر نافذة أرقام العداد بشكل واضح ومستقيم وبإضاءة زينة.</p>
+  <label class="drop" for="ph"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2F6FDB" stroke-width="1.8"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.5"/></svg>
+  <div style="font-weight:600;margin-top:6px">صوّر أو ارفع صورة</div><div class="tiny muted">JPG أو PNG</div></label>
+  <input id="ph" type="file" accept="image/*" capture="environment" class="hide">
+  <div id="pv" class="hide" style="margin-top:12px">
+   <p class="small" style="margin-bottom:6px"><b>حدد الأرقام:</b> اسحب المربع على أرقام العداد بس.</p>
+   <div id="cropWrap" style="position:relative;touch-action:none;border-radius:16px;overflow:hidden;background:#1F2A36">
+    <canvas id="cv" style="display:block;width:100%"></canvas>
+    <div id="box" style="position:absolute;border:3px solid #F2A7C3;border-radius:8px;box-shadow:0 0 0 2000px rgba(0,0,0,.45)"></div>
+   </div>
+   <button id="read" class="btn" style="margin-top:12px">اقرأ الأرقام</button>
+   <p id="aiNote" class="tiny muted" style="margin-top:6px">القراءة تصير على جهازك، والصورة ما تطلع منه.</p></div>
+  <div id="res"></div></div>
+  <button class="btn ghost" onclick="manual()">أدخل القراءة يدوياً</button>`;
+  $('#ph').onchange=async e=>{const f=e.target.files[0];if(!f)return;await loadImg(f);$('#pv').classList.remove('hide');$('#res').innerHTML='';};
+  $('#read').onclick=readOCR;
+}
+let IMG=null,BOX=null;
+function loadImg(file){return new Promise(ok=>{const im=new Image();im.onload=()=>{
+  const k=Math.min(1,1600/Math.max(im.width,im.height)),c=$('#cv');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+  c.getContext('2d').drawImage(im,0,0,c.width,c.height);IMG=c;
+  BOX={x:.15,y:.38,w:.7,h:.2};drawBox();bindCrop();ok();};im.onerror=()=>ok();im.src=URL.createObjectURL(file);});}
+function drawBox(){const b=$('#box');b.style.left=BOX.x*100+'%';b.style.top=BOX.y*100+'%';b.style.width=BOX.w*100+'%';b.style.height=BOX.h*100+'%';}
+function bindCrop(){
+  const w=$('#cropWrap');let st=null;
+  const pt=e=>{const r=w.getBoundingClientRect();return {x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))};};
+  w.onpointerdown=e=>{w.setPointerCapture(e.pointerId);st=pt(e);};
+  w.onpointermove=e=>{if(!st)return;const p=pt(e);const x=Math.min(st.x,p.x),y=Math.min(st.y,p.y),ww=Math.abs(p.x-st.x),hh=Math.abs(p.y-st.y);
+    if(ww>.04&&hh>.03){BOX={x,y,w:ww,h:hh};drawBox();}};
+  w.onpointerup=()=>{st=null;};
+}
+function cropCanvas(invert){
+  const sx=BOX.x*IMG.width,sy=BOX.y*IMG.height,sw=BOX.w*IMG.width,sh=BOX.h*IMG.height;
+  const scale=Math.max(1,140/sh),c=document.createElement('canvas');c.width=Math.round(sw*scale)+40;c.height=Math.round(sh*scale)+40;
+  const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(IMG,sx,sy,sw,sh,20,20,sw*scale,sh*scale);
+  const d=g.getImageData(0,0,c.width,c.height),p=d.data,hist=new Array(256).fill(0),gray=new Uint8Array(p.length/4);
+  for(let i=0;i<gray.length;i++){const v=Math.round(.299*p[i*4]+.587*p[i*4+1]+.114*p[i*4+2]);gray[i]=v;hist[v]++;}
+  let sum=0;for(let i=0;i<256;i++)sum+=i*hist[i];let sB=0,wB=0,best=0,th=128;
+  for(let i=0;i<256;i++){wB+=hist[i];if(!wB)continue;const wF=gray.length-wB;if(!wF)break;sB+=i*hist[i];const mB=sB/wB,mF=(sum-sB)/wF,v=wB*wF*(mB-mF)**2;if(v>best){best=v;th=i;}}
+  for(let i=0;i<gray.length;i++){let v=gray[i]>th?255:0;if(invert)v=255-v;p[i*4]=p[i*4+1]=p[i*4+2]=v;}
+  g.putImageData(d,0,0);return c;
+}
+let tessLoading=null;
+function loadTess(){if(window.Tesseract)return Promise.resolve();if(tessLoading)return tessLoading;
+  tessLoading=new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';sc.onload=ok;sc.onerror=no;document.head.appendChild(sc);});return tessLoading;}
+let worker=null;
+async function getWorker(){await loadTess();if(worker)return worker;
+  worker=await Tesseract.createWorker('eng');await worker.setParameters({tessedit_char_whitelist:'0123456789',tessedit_pageseg_mode:'7'});return worker;}
+function placeDecimal(digits){
+  const prev=sorted().slice(-1)[0];const n=digits.length;if(!n)return null;
+  const opts=[];for(let k=0;k<=Math.min(3,n-1);k++)opts.push(parseInt(digits,10)/Math.pow(10,k));
+  if(prev){const ok=opts.filter(v=>v>=prev.value-0.001);if(ok.length)return ok.reduce((a,b)=>Math.abs(a-prev.value)<Math.abs(b-prev.value)?a:b);}
+  return n>5?parseInt(digits.slice(0,5),10)+parseInt(digits.slice(5),10)/Math.pow(10,n-5):parseInt(digits,10);
+}
+async function readOCR(){
+  if(!IMG)return;const b=$('#read');b.disabled=true;b.innerHTML='<span class="spin"></span> جاري قراءة الأرقام…';
+  try{
+    const w=await getWorker();let best=null;
+    for(const inv of [false,true]){const r=await w.recognize(cropCanvas(inv));const digits=(r.data.text||'').replace(/\D/g,'');
+      const conf=(r.data.confidence||0)/100;if(digits.length>=3&&(!best||conf>best.conf))best={digits,conf};}
+    if(!best){confirmBox(null,{note:'ما قدرنا نقرأ الأرقام. قرّب المربع على الأرقام بس، أو جرّب صورة أوضح.'});return;}
+    confirmBox({reading:placeDecimal(best.digits),digits_seen:best.digits,confidence:best.conf});
+  }catch(e){confirmBox(null,{note:'ما قدرنا نشغّل القراءة. تأكد إنك متصل بالإنترنت أول مرة، أو اكتب الرقم.'});}
+  finally{b.disabled=false;b.textContent='اقرأ الأرقام';}
+}
+
+function confirmBox(v,o={}){
+  const ok=v&&typeof v.reading==='number'&&isFinite(v.reading);
+  const low=ok&&(v.confidence??0)<0.6;
+  const prev=sorted().slice(-1)[0];
+  const back=ok&&prev&&v.reading<prev.value;
+  $('#res').innerHTML=`<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
+  ${ok?`<div class="tiny muted">القراءة</div><div class="digits">${fmt(v.reading,3)} <span class="small">م³</span></div>
+  <div class="tiny muted">الأرقام المقروءة: ${esc(v.digits_seen||'')} · الثقة ${fmt((v.confidence||0)*100,0)}%</div>`:''}
+  ${low||back?`<div class="alert amber" style="margin-top:10px">${back?'هذي القراءة أقل من آخر قراءة. ':''}تأكد من الرقم زين.${low?' إذا مو متأكد، بينطلب قراءة من موظف (محاكاة).':''}</div>`:''}
+  ${!ok?`<div class="alert amber">${esc(o.note||'ما قدرنا نقرأ الأرقام.')}</div>`:''}
+  <label>أكّد القراءة أو عدّلها (م³)</label><input id="val" type="number" step="0.001" inputmode="decimal" value="${ok?v.reading:''}">
+  <label>التاريخ</label><input id="dt" type="date" value="${today()}">
+  <button class="btn" style="margin-top:12px" id="sv">احفظ القراءة</button>
+  ${!ok||low?`<button class="btn ghost" style="margin-top:8px" id="ref">اطلب قراءة من موظف (محاكاة)</button>`:''}</div>`;
+  $('#sv').onclick=()=>{const val=parseFloat($('#val').value);if(!(val>=0))return $('#val').focus();
+    S.readings.push({id:Math.random().toString(36).slice(2,9),date:$('#dt').value||today(),value:val,source:ok?'ai':'manual',ai:ok?v.reading:null});save();toast('تم حفظ القراءة');go('home');};
+  const r=$('#ref');if(r)r.onclick=()=>toast('محاكاة: تم طلب قراءة من موظف الوزارة.');
+}
+
+function manual(){view='scan';scan();confirmBox(null,{note:'أدخل الرقم الظاهر على العداد.'});}
+
+function reuse(){
+  const c=reuseCalc(),R=S.reuse,p=S.profile;
+  const row=(n,v,col)=>`<div class="row between small" style="margin:6px 0"><span><span class="dot" style="background:${col};width:9px;height:9px;margin-inline-end:6px"></span>${n}</span><b>${fmt(v,0)} لتر/يوم</b></div>`;
+  $('#view').innerHTML=`<div class="card"><h2>مخطط إعادة الاستخدام</h2>
+  <p class="muted small">كم تغطي المياه الرمادية المعالجة وماي المكيف من احتياجاتك الخارجية.</p>
+  <div style="margin:14px 0 6px" class="row between"><span class="small">تغطيها المياه المعالجة</span><b class="big" style="font-size:24px;color:var(--purple)">${fmt(c.share*100,0)}%</b></div>
+  <div class="bar"><i style="width:${c.share*100}%"></i></div>
+  <div class="grid2" style="margin-top:12px"><div class="stat"><div class="tiny muted">المياه المعالجة المتوفرة</div><div class="big">${fmt(c.supply,0)} <span class="small">لتر/يوم</span></div></div>
+  <div class="stat"><div class="tiny muted">الاحتياج الخارجي</div><div class="big">${fmt(c.demand,0)} <span class="small">لتر/يوم</span></div></div></div>
+  <div style="margin-top:12px">${row('الري · '+fmt(p.irrArea,0)+' م²',c.irr,'var(--green)')}${row('غسيل السيارات · '+p.cars+' سيارة',c.wash,'var(--pink)')}${row('الحنفيات الخارجية',c.taps,'var(--grey)')}</div>
+  ${c.supply>c.demand?`<div class="alert green" style="margin-top:8px">المياه المعالجة تغطي كل الاستخدام الخارجي، ويزيد عنها تقريباً ${fmt(c.supply-c.demand,0)} لتر/يوم.</div>`:''}</div>
+  <form class="card" id="rf"><div class="row between"><h2>الافتراضات</h2><span class="tag">قيم مؤقتة</span></div>
+  <p class="tiny muted">استبدلها بقيم التصميم.</p>
+  <div class="grid2">
+  ${[['greyLpd','المياه الرمادية (لتر/شخص/يوم)'],['condLpd','ماي المكيف (لتر/يوم)'],['irrLm2','الري (لتر/م²/يوم)'],['washesWk','غسلات السيارة بالأسبوع'],['washL','ماي الغسلة (لتر)'],['tapsLpd','الحنفيات الخارجية (لتر/يوم)']].map(([k,n])=>`<div><label>${n}</label><input name="${k}" type="number" step="any" min="0" value="${R[k]}"></div>`).join('')}
+  </div></form>`;
+  $('#rf').oninput=()=>{const f=new FormData($('#rf'));for(const[k,v]of f)S.reuse[k]=+v||0;save();clearTimeout(window._rt);window._rt=setTimeout(()=>{const y=scrollY;reuse();scrollTo(0,y);},600);};
+}
+
+function settings(){
+  const p=S.profile||{},t=S.tariff.tiers.length?S.tariff.tiers:[{upTo:'',rate:''}];
+  $('#view').innerHTML=`<form class="card" id="f"><h2>المنزل</h2>${profileFields(p)}<button class="btn" style="margin-top:14px">حفظ</button></form>
+  <form class="card" id="tf"><div class="row between"><h2>تعرفة الماء</h2><span class="tag">تأكد من الوزارة</span></div>
+  <p class="tiny muted">أدخل تعرفة وزارة الكهرباء والماء. اترك خانة "إلى" فاضية بآخر شريحة.</p>
+  <div id="tiers">${t.map((x,i)=>tierRow(x,i)).join('')}</div>
+  <div class="row" style="margin-top:10px"><button type="button" class="btn sec" id="addT">أضف شريحة</button><button class="btn">احفظ التعرفة</button></div></form>
+  <div class="card"><h2>البيانات</h2><div class="row"><button class="btn sec" id="demo">حمّل بيانات تجريبية</button><button class="btn ghost" id="clr">امسح الكل</button></div></div>`;
+  $('#f').onsubmit=e=>{e.preventDefault();S.profile=readProfile();save();toast('تم الحفظ');go('home');};
+  $('#addT').onclick=()=>{const n=document.querySelectorAll('.tier').length;$('#tiers').insertAdjacentHTML('beforeend',tierRow({upTo:'',rate:''},n));};
+  $('#tf').onsubmit=e=>{e.preventDefault();S.tariff.tiers=[...document.querySelectorAll('.tier')].map(r=>({upTo:parseFloat(r.querySelector('[name=u]').value)||null,rate:parseFloat(r.querySelector('[name=r]').value)||0})).filter(x=>x.rate>0);save();toast('تم حفظ التعرفة');};
+  $('#demo').onclick=loadDemo;
+  $('#clr').onclick=()=>ask('تبي تمسح كل القراءات والإعدادات بهذا الحساب؟',()=>{S=JSON.parse(JSON.stringify(DEFAULT));save();go('onboard');});
+}
+function tierRow(x,i){return `<div class="grid2 tier"><div><label>شريحة ${i+1}: إلى (م³)</label><input name="u" type="number" step="any" value="${x.upTo??''}" placeholder="بدون حد"></div><div><label>السعر (د.ك لكل م³)</label><input name="r" type="number" step="any" value="${x.rate||''}"></div></div>`;}
+
+function loadDemo(){
+  const base=4700,uses=[31,34,29,33,30,46],d=new Date();d.setDate(d.getDate()-5);
+  const r=[];let v=base;const dates=[];for(let i=uses.length;i>=0;i--){const x=new Date(d);x.setMonth(d.getMonth()-i);dates.push(x.toISOString().slice(0,10));}
+  r.push({id:'d0',date:dates[0],value:v,source:'manual',ai:null});
+  uses.forEach((u,i)=>{v+=u+Math.round(Math.random()*400)/1000;r.push({id:'d'+(i+1),date:dates[i+1],value:+v.toFixed(3),source:'ai',ai:+v.toFixed(3)});});
+  S.profile=S.profile||{name:'بيت تجريبي',residents:6,cars:2,irrArea:80,floors:2};S.readings=r;save();toast('تم تحميل البيانات التجريبية');go('home');
+}
+
+function toast(m){const t=document.createElement('div');t.textContent=m;t.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#14324B;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:10';document.body.appendChild(t);setTimeout(()=>t.remove(),2200);}
+function ask(q,yes){const m=$('#modal');m.innerHTML=`<div class="card"><p style="margin-bottom:14px">${esc(q)}</p><div class="row"><button class="btn ghost" id="no">إلغاء</button><button class="btn" id="yes" style="background:var(--red)">امسح</button></div></div>`;m.classList.remove('hide');$('#no').onclick=()=>m.classList.add('hide');$('#yes').onclick=()=>{m.classList.add('hide');yes();};}
+
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{if(!S.profile)return;go(b.dataset.v);});
+
+/* ---------- boot ---------- */
+loadLocal();render();
+
+</script>
+</body>
+</html>
