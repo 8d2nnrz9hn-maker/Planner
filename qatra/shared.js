@@ -354,7 +354,7 @@ function wizard() {
   if (wizStep === 3) {
     $('#edit').onclick = () => { wizStep = 1; wizard(); scrollTo(0, 0); };
     $('#ok').onclick = () => {
-      S.profile = { ...d, name: d.bname, residents: +d.kids + +d.adults, floors: Math.min(4, +d.floors) }; save();
+      S.profile = { ...d, chip: (S.profile && S.profile.chip) || d.chip || '', name: d.bname, residents: +d.kids + +d.adults, floors: Math.min(4, +d.floors) }; save();
       wizData = null; wizStep = 1; editingBuilding = false; toast(t('تم حفظ المعلومات', 'Information saved')); go('home');
     };
   }
@@ -366,47 +366,27 @@ function onboard() { settings(); }
 function settings() {
   if (!CU) return authView();
   if (!S.profile || editingBuilding) return wizard();
-  const p = S.profile, tiers = S.tariff.tiers.length ? S.tariff.tiers : [{ upTo: '', rate: '' }];
+  const p = S.profile, yn = v => v ? t('نعم', 'Yes') : t('لا', 'No');
+  const addr = [lbl(GOVS, p.gov), p.area, p.block ? t('قطعة ', 'Block ') + p.block : '', p.street ? t('شارع ', 'Street ') + p.street : '', p.avenue ? t('جادة ', 'Avenue ') + p.avenue : '', p.houseNo ? t('منزل ', 'House ') + p.houseNo : ''].filter(Boolean).join('، ');
+  const rows = [[t('الموقع', 'Location'), addr], [t('نوع المبنى', 'Building type'), p.btype === 'other' ? p.btypeOther : lbl(TYPES, p.btype)],
+    [t('عدد الأدوار', 'Floors'), p.floors], ...(p.btype === 'apartments' ? [[t('عدد الشقق', 'Apartments'), p.apts]] : []),
+    [t('مساحة المبنى', 'Building area'), (p.barea || '–') + t(' م²', ' m²')],
+    [t('السكان', 'Residents'), `${p.residents} (${t('أطفال', 'children')} ${p.kids ?? 0}، ${t('بالغين', 'adults')} ${p.adults ?? p.residents})`],
+    [t('السيارات', 'Cars'), (p.cars ?? 0) + (+p.cars > 0 ? ` · ${t('غسيل بالبيت', 'washed at home')}: ${yn(p.carWash)}` : '')],
+    [t('حديقة', 'Garden'), p.garden ? `${t('نعم', 'Yes')} · ${p.irrArea}${t(' م²', ' m²')}` : t('لا', 'No')], [t('مسبح', 'Pool'), yn(p.pool)],
+    ...(p.chip ? [[t('رقم الشريحة', 'Chip number'), p.chip]] : [])];
   $('#view').innerHTML = `
   <div class="card"><div class="row between"><h2>${t('حسابي', 'My account')}</h2><button class="link" style="margin:0" onclick="logout()">${t('تسجيل خروج', 'Log out')}</button></div>
    <div class="small"><b>${esc(CU.name)}</b></div><div class="small muted" dir="ltr" style="text-align:${LANG === 'ar' ? 'right' : 'left'}">${esc(CU.email)} · ${esc(CU.phone)}</div>
    <button class="btn ghost" style="margin-top:10px" onclick="switchLang()">${t('لغة البرنامج: العربية ← English', 'Language: English → العربية')}</button></div>
   <div class="card"><div class="row between"><h2>${esc(p.bname || p.name)}</h2><span class="tag">${esc(p.btype === 'other' ? p.btypeOther : lbl(TYPES, p.btype))}</span></div>
-   <p class="small muted">${esc([lbl(GOVS, p.gov), p.area, t('قطعة ', 'Block ') + (p.block || '')].filter(Boolean).join('، '))}</p>
-   <div class="grid2" style="margin-top:8px"><div class="stat"><div class="tiny muted">${t('السكان', 'Residents')}</div><div class="big">${p.residents}</div></div>
-   <div class="stat"><div class="tiny muted">${t('الأدوار', 'Floors')}</div><div class="big">${p.floors}</div></div></div>
-   <button class="btn sec" style="margin-top:10px" onclick="editingBuilding=true;wizStep=1;wizData=null;render()">${t('تعديل المعلومات', 'Edit information')}</button></div>
-  <form class="card" id="tf"><div class="row between"><h2>${t('تعرفة الماء', 'Water tariff')}</h2><span class="tag">${t('تأكد من الوزارة', 'confirm with MEW')}</span></div>
-   <p class="tiny muted">${t('أدخل تعرفة وزارة الكهرباء والماء. اترك خانة "إلى" فاضية بآخر شريحة.', 'Enter the Ministry of Electricity and Water tariff. Leave "up to" empty on the last tier.')}</p>
-   <div id="tiers">${tiers.map(tierRow2).join('')}</div>
-   <div class="row" style="margin-top:10px"><button type="button" class="btn sec" id="addT">${t('أضف شريحة', 'Add tier')}</button><button class="btn">${t('احفظ التعرفة', 'Save tariff')}</button></div></form>
-  <div class="card"><h2>${t('البيانات', 'Data')}</h2><div class="row"><button class="btn sec" id="demo">${t('حمّل بيانات تجريبية', 'Load demo data')}</button><button class="btn ghost" id="clr">${t('امسح القراءات', 'Clear readings')}</button></div></div>`;
-  $('#addT').onclick = () => $('#tiers').insertAdjacentHTML('beforeend', tierRow2({ upTo: '', rate: '' }, document.querySelectorAll('.tier').length));
-  $('#tf').onsubmit = e => { e.preventDefault(); S.tariff.tiers = [...document.querySelectorAll('.tier')].map(r => ({ upTo: parseFloat(r.querySelector('[name=u]').value) || null, rate: parseFloat(r.querySelector('[name=r]').value) || 0 })).filter(x => x.rate > 0); save(); toast(t('تم حفظ التعرفة', 'Tariff saved')); };
-  $('#demo').onclick = loadDemo;
-  $('#clr').onclick = () => ask(t('تبي تمسح كل القراءات؟', 'Clear all readings?'), () => { S.readings = []; save(); go('home'); });
+   <table>${rows.map(([k, v]) => `<tr><th style="width:38%">${k}</th><td>${esc(v)}</td></tr>`).join('')}</table>
+   <button class="btn sec" style="margin-top:12px" onclick="editingBuilding=true;wizStep=1;wizData=null;render()">${t('تعديل المعلومات', 'Edit information')}</button></div>
+  <div class="card"><h2>${t('الإشعارات', 'Notifications')}</h2><p class="small muted">${t('ننبهك إذا زاد استهلاكك فجأة أو إذا وفّرت.', 'We alert you if your use jumps or when you save.')}</p>
+   <button class="btn sec" style="margin-top:10px" onclick="enablePush()">${t('فعّل إشعارات الجوال', 'Enable phone notifications')}</button></div>`;
 }
-function tierRow2(x, i) { return `<div class="grid2 tier"><div><label>${t('شريحة', 'Tier')} ${i + 1}: ${t('إلى (م³)', 'up to (m³)')}</label><input name="u" type="number" step="any" value="${x.upTo ?? ''}" placeholder="${t('بدون حد', 'no limit')}"></div><div><label>${t('السعر (د.ك لكل م³)', 'Rate (KD per m³)')}</label><input name="r" type="number" step="any" value="${x.rate || ''}"></div></div>`; }
 
 /* ---------------- meter reading (on-device OCR) ---------------- */
-function scan() {
-  $('#view').innerHTML = `<div class="card"><h2>${t('صوّر العداد', 'Scan your meter')}</h2>
-  <p class="muted small" style="margin-bottom:12px">${t('صوّر نافذة أرقام العداد بشكل واضح ومستقيم وبإضاءة زينة.', "Take a clear, straight photo of the meter's number window in good light.")}</p>
-  <label class="drop" for="ph"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2F6FDB" stroke-width="1.8"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.5"/></svg>
-  <div style="font-weight:600;margin-top:6px">${t('صوّر أو ارفع صورة', 'Take or upload a photo')}</div><div class="tiny muted">JPG / PNG</div></label>
-  <input id="ph" type="file" accept="image/*" capture="environment" class="hide">
-  <div id="pv" class="hide" style="margin-top:12px">
-   <p class="small" style="margin-bottom:6px"><b>${t('حدد الأرقام:', 'Select the digits:')}</b> ${t('اسحب المربع على أرقام العداد بس.', 'drag the box over the meter digits only.')}</p>
-   <div id="cropWrap" style="position:relative;touch-action:none;border-radius:16px;overflow:hidden;background:#1F2A36">
-    <canvas id="cv" style="display:block;width:100%"></canvas>
-    <div id="box" style="position:absolute;border:3px solid #F2A7C3;border-radius:8px;box-shadow:0 0 0 2000px rgba(0,0,0,.45)"></div></div>
-   <button id="read" class="btn" style="margin-top:12px">${t('اقرأ الأرقام', 'Read digits')}</button>
-   <p class="tiny muted" style="margin-top:6px">${t('القراءة تصير على جهازك، والصورة ما تطلع منه.', 'Reading happens on your device; the photo never leaves it.')}</p></div>
-  <div id="res"></div></div>
-  <button class="btn ghost" onclick="manual()">${t('أدخل القراءة يدوياً', 'Enter reading manually instead')}</button>`;
-  $('#ph').onchange = async e => { const f = e.target.files[0]; if (!f) return; await loadImg(f); $('#pv').classList.remove('hide'); $('#res').innerHTML = ''; };
-  $('#read').onclick = readOCR;
-}
 let IMG = null, BOX = null;
 function loadImg(file) { return new Promise(ok => { const im = new Image(); im.onload = () => {
   const k = Math.min(1, 1600 / Math.max(im.width, im.height)), c = $('#cv'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
