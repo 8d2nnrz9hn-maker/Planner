@@ -114,25 +114,22 @@ async function enablePush() {
 
 /* ---------------- charts ---------------- */
 function lineChart(months) {
-  const W = 340, H = 190, L = 50, B = 26, T = 12, m = monthly(), cm = curMonth();
-  const mine = months.map(k => k < cm && m[k] ? m[k] : null);
-  const ps = months.map(k => peers(k)), lo = ps.map(a => q(a, .25)), mid = ps.map(a => q(a, .5)), hi = ps.map(a => q(a, .75));
-  const max = Math.max(...hi, ...mine.filter(v => v != null)) * 1.12;
-  const X = i => L + 8 + i * (W - L - 34) / (months.length - 1), Y = v => T + (H - T - B) * (1 - v / max);
+  const W = 340, H = 200, L = 50, B = 26, T = 14, m = monthly(), cm = curMonth();
+  const mine = months.map(k => k < cm && m[k] ? m[k] : null), mid = months.map(k => q(peers(k), .5));
+  const lv = months.map((k, i) => mine[i] == null ? null : verdictFor(k, mine[i]).level);
+  const max = Math.max(...mid, ...mine.filter(v => v != null)) * 1.15, n = months.length, bw = (W - L - 10) / n;
+  const X = i => L + 4 + i * bw + bw / 2, Y = v => T + (H - T - B) * (1 - v / max);
+  const COL = { green: '#3FA672', yellow: '#E5B800', red: '#D9534F' };
   const ticks = [0, .25, .5, .75, 1].map(f => max * f);
-  const band = `M${hi.map((v, i) => `${X(i)},${Y(v)}`).join(' L')} L${lo.map((v, i) => `${X(i)},${Y(v)}`).reverse().join(' L')} Z`;
-  let path = '', pen = false; mine.forEach((v, i) => { if (v == null) { pen = false; return; } path += `${pen ? 'L' : 'M'}${X(i)},${Y(v)} `; pen = true; });
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" dir="ltr" font-family="var(--font)">
    ${ticks.map(v => `<line x1="${L}" x2="${W - 4}" y1="${Y(v)}" y2="${Y(v)}" stroke="#E8EEF4"/><text x="${L - 6}" y="${Y(v) + 3}" font-size="9" text-anchor="end" fill="#6B7F92">${v >= 1000 ? fmt(v / 1000) + 'k' : fmt(v)}</text>`).join('')}
-   <path d="${band}" fill="#3FA672" opacity=".18"/>
-   <path d="M${hi.map((v, i) => `${X(i)},${Y(v)}`).join(' L')}" fill="none" stroke="#3FA672" stroke-width="1.2" opacity=".7"/>
-   <path d="M${lo.map((v, i) => `${X(i)},${Y(v)}`).join(' L')}" fill="none" stroke="#3FA672" stroke-width="1.2" opacity=".7"/>
-   <path d="M${mid.map((v, i) => `${X(i)},${Y(v)}`).join(' L')}" fill="none" stroke="#6B7F92" stroke-width="2" stroke-dasharray="5 4"/>
-   <path d="${path}" fill="none" stroke="#2F6FDB" stroke-width="3" stroke-linejoin="round"/>
-   ${mine.map((v, i) => v == null ? '' : `<circle cx="${X(i)}" cy="${Y(v)}" r="3.5" fill="#2F6FDB"/>`).join('')}
-   ${months.map((k, i) => i % 2 === (months.length - 1) % 2 ? `<text x="${X(i)}" y="${H - 8}" font-size="9" text-anchor="middle" fill="#6B7F92">${mName(k)}</text>` : '').join('')}
+   ${mine.map((v, i) => v == null ? '' : `<rect x="${X(i) - bw * .32}" y="${Y(v)}" width="${bw * .64}" height="${Y(0) - Y(v)}" rx="4" fill="${COL[lv[i]]}"/>`).join('')}
+   <path d="M${mid.map((v, i) => `${X(i)},${Y(v)}`).join(' L')}" fill="none" stroke="#14324B" stroke-width="2" stroke-dasharray="5 4"/>
+   ${mid.map((v, i) => `<circle cx="${X(i)}" cy="${Y(v)}" r="2.5" fill="#14324B"/>`).join('')}
+   ${months.map((k, i) => i % 2 === (n - 1) % 2 ? `<text x="${X(i)}" y="${H - 8}" font-size="9" text-anchor="middle" fill="#6B7F92">${mName(k)}</text>` : '').join('')}
   </svg>
-  <div class="legend"><span><i style="background:#2F6FDB"></i>${t('بيتك', 'Your home')}</span><span><i style="background:#6B7F92"></i>${t('متوسط البيوت المشابهة', 'Similar homes (median)')}</span><span><i style="background:rgba(63,166,114,.3);border:1px solid #3FA672;height:10px;width:16px"></i>${t('المعدل الطبيعي', 'Normal range')}</span></div>`;
+  <div class="legend"><span><i style="background:#14324B"></i>${t('المعتاد للبيوت المشابهة', 'Typical for similar homes')}</span></div>
+  <div class="legend"><span><i style="background:#3FA672;height:10px;width:10px"></i>${t('بيتك: قليل', 'You: low')}</span><span><i style="background:#E5B800;height:10px;width:10px"></i>${t('متوسط', 'average')}</span><span><i style="background:#D9534F;height:10px;width:10px"></i>${t('عالي', 'high')}</span></div>`;
 }
 function barChart(fm) {
   const d = fm.slice(-12), W = 340, H = 180, L = 6, B = 24, T = 22, max = Math.max(...d.map(x => x.use)) * 1.1, bw = (W - L) / d.length;
