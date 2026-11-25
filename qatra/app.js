@@ -91,10 +91,10 @@ function checkNotifs() {
   for (let i = Math.max(1, fm.length - 2); i < fm.length; i++) {
     const cur = fm[i], prev = fm.slice(Math.max(0, i - 3), i), avg = prev.reduce((s, x) => s + x.use, 0) / prev.length, ch = (cur.use - avg) / avg * 100;
     const pm = fm[i - 1], chPrev = (cur.use - pm.use) / pm.use * 100;
-    if (chPrev >= 15 || ch >= 20) addNotif('leak-' + cur.month, 'red', t(`استهلاك ${mName(cur.month)} أعلى بـ ${fmt(Math.max(ch, chPrev))}% من ${chPrev >= ch ? 'الشهر اللي قبله' : 'معدلك'}. ممكن يكون فيه تسريب بالبيت، افحص السيفونات والحنفيات والتانكي.`,
-      `${mName(cur.month)} use is ${fmt(Math.max(ch, chPrev))}% above ${chPrev >= ch ? 'the previous month' : 'your average'}. There may be a leak: check toilets, taps and the roof tank.`));
-    else if (chPrev <= -5) addNotif('save-' + cur.month, 'green', t(`أحسنت! وفّرت ${fmt(-chPrev)}% في ${mName(cur.month)} مقارنة بـ ${mName(pm.month)} (${fmt(pm.use - cur.use)} قالون).`,
-      `Well done! You saved ${fmt(-chPrev)}% in ${mName(cur.month)} compared with ${mName(pm.month)} (${fmt(pm.use - cur.use)} gal).`));
+    if (chPrev >= 15 || ch >= 20) addNotif('leak-' + cur.month, 'red', t(`استهلاك ${mName(cur.month)} أعلى بـ ${fmt(Math.max(ch, chPrev))}% من المعتاد. ممكن يكون فيه تسريب.`,
+      `${mName(cur.month)} use is ${fmt(Math.max(ch, chPrev))}% above usual. There may be a leak.`));
+    else if (chPrev <= -5) addNotif('save-' + cur.month, 'green', t(`وفّرت ${fmt(-chPrev)}% في ${mName(cur.month)} (${fmt(pm.use - cur.use)} قالون).`,
+      `You saved ${fmt(-chPrev)}% in ${mName(cur.month)} (${fmt(pm.use - cur.use)} gal).`));
   }
 }
 function updateBell() { const n = S.notifs.filter(x => x.at > (S.notifSeen || 0)).length, b = $('#bell b'); if (b) { b.textContent = n; b.style.display = n ? '' : 'none'; } }
@@ -170,30 +170,34 @@ function home() {
   ${!r.length ? demoCard() : ''}`;
 }
 
+function chips(list) { return `<div class="chips">${list.map(x => `<span>${esc(x)}</span>`).join('')}</div>`; }
+function peerChips() {
+  const p = S.profile, out = [lbl(TYPES, p.btype), `${p.residents} ${t('سكان', 'residents')}`, `${p.floors} ${t('أدوار', 'floors')}`];
+  if (p.garden) out.push(t('حديقة', 'Garden')); if (p.pool) out.push(t('مسبح', 'Pool')); if (p.carWash && +p.cars) out.push(t('غسيل سيارات', 'Car washing'));
+  return out;
+}
 function compare() {
   const fm = fullMonths();
-  if (!fm.length) { $('#view').innerHTML = `<div class="card"><h2>${t('المقارنة', 'Compare')}</h2><p class="small muted">${t('سجّل قراءتين على الأقل بينهم شهر عشان نقارن بيتك بالبيوت المشابهة.', 'Log at least two readings a month apart to compare your home with similar homes.')}</p></div>${demoCard()}`; return; }
-  const last = fm[fm.length - 1], v = verdictFor(last.month, last.use), months = lastMonths(12);
-  const words = { red: [t('استهلاكك عالي', 'Your use is high'), t('أعلى من أغلب البيوت المشابهة لك. شوف نصايح التوفير تحت.', 'Higher than most similar homes. See the saving tips below.')],
-    yellow: [t('استهلاكك متوسط', 'Your use is average'), t('ضمن المعدل الطبيعي للبيوت المشابهة لك.', 'Within the normal range for similar homes.')],
-    green: [t('استهلاكك قليل', 'Your use is low'), t('أقل من أغلب البيوت المشابهة لك. استمر!', 'Lower than most similar homes. Keep it up!')] }[v.level];
-  const prev = fm[fm.length - 2], ch = prev ? (last.use - prev.use) / prev.use * 100 : null;
+  if (!fm.length) { $('#view').innerHTML = `<div class="card empty"><div class="ico">${ICON.chart}</div><h2>${t('ما فيه بيانات كافية', 'Not enough data yet')}</h2><p class="small muted">${t('سجّل قراءتين بينهم شهر عشان تبدأ المقارنة.', 'Log two readings a month apart to start comparing.')}</p>${demoCard()}</div>`; return; }
+  const last = fm[fm.length - 1], v = verdictFor(last.month, last.use), prev = fm[fm.length - 2], ch = prev ? (last.use - prev.use) / prev.use * 100 : null;
+  const word = { red: t('عالي', 'High'), yellow: t('متوسط', 'Average'), green: t('قليل', 'Low') }[v.level];
+  const yr = fm.slice(-12), tot = yr.reduce((a, x) => a + x.use, 0), top = yr.reduce((a, x) => x.use > a.use ? x : a, yr[0]);
   $('#view').innerHTML = `
-  <div class="card"><h2>${t('بيتك مقارنة بالبيوت المشابهة', 'Your home vs similar homes')}</h2>
-   <p class="tiny muted" style="margin-bottom:6px">${t('بيوت مثل بيتك: ', 'Homes like yours: ')}${esc(peerDesc())}</p>
-   ${lineChart(months)}
-   <div class="verdict ${v.level}"><span class="lamp"></span><div><b>${words[0]}</b> · ${mName(last.month)}<br><span class="small">${words[1]}</span></div></div>
-   <div class="cmp"><div>${t('بيتك', 'Your home')}<b>${fmt(last.use)}${G}</b></div><div>${t('البيت المشابه المعتاد', 'Typical similar home')}<b>${fmt(v.med)}${G}</b></div></div>
-   <p class="small" style="margin-top:8px">${v.diff >= 0 ? t(`تستهلك أكثر بـ ${fmt(v.diff)}% من البيت المشابه المعتاد.`, `You use ${fmt(v.diff)}% more than a typical similar home.`) : t(`تستهلك أقل بـ ${fmt(-v.diff)}% من البيت المشابه المعتاد.`, `You use ${fmt(-v.diff)}% less than a typical similar home.`)}</p>
-   <p class="tiny muted" style="margin-top:6px">${t('بيانات البيوت المشابهة تجريبية (محاكاة) لين يتم ربطها ببيانات الوزارة.', 'Similar-home data is simulated until it is connected to Ministry records.')}</p></div>
-  <div class="card"><h2>${t('استهلاك بيتك شهر بشهر', 'Your home month by month')}</h2>
+  <div class="card"><div class="row between"><h2>${t('مقارنة بالبيوت المشابهة', 'Vs similar homes')}</h2><span class="tag">${t('تجريبي', 'Demo')}</span></div>
+   ${chips(peerChips())}
+   ${lineChart(lastMonths(12))}
+   <div class="verdict ${v.level}"><span class="lamp"></span><div class="grow"><b>${t('استهلاكك', 'Your use')} ${word}</b><div class="tiny">${mName(last.month)}</div></div>
+    <div class="pct">${v.diff >= 0 ? '+' : '−'}${fmt(Math.abs(v.diff))}%<div class="tiny">${t('عن المعتاد', 'vs typical')}</div></div></div>
+   <div class="kpis"><div><span>${t('بيتك', 'You')}</span><b>${fmt(last.use)}</b></div><div><span>${t('المعتاد', 'Typical')}</span><b>${fmt(v.med)}</b></div><div><span>${t('الفرق', 'Gap')}</span><b>${fmt(last.use - v.med)}</b></div></div>
+   <p class="tiny muted center">${t('بالقالون', 'in gallons')}</p></div>
+  <div class="card"><h2>${t('شهر بشهر', 'Month by month')}</h2>
    ${fm.length >= 2 ? barChart(fm) : `<p class="small muted">${t('يحتاج شهرين على الأقل.', 'Needs at least two months.')}</p>`}
    ${ch == null ? '' : `<div class="alert ${ch > 0 ? (ch >= 15 ? 'red' : 'amber') : 'green'}" style="margin-top:10px">${ch > 0
-     ? t(`زاد استهلاكك ${fmt(ch)}% في ${mName(last.month)} مقارنة بـ ${mName(prev.month)}.${ch >= 15 ? ' ممكن يكون فيه تسريب بالبيت.' : ''}`, `Your use rose ${fmt(ch)}% in ${mName(last.month)} vs ${mName(prev.month)}.${ch >= 15 ? ' There may be a leak.' : ''}`)
-     : t(`وفّرت ${fmt(-ch)}% في ${mName(last.month)} مقارنة بـ ${mName(prev.month)}.`, `You saved ${fmt(-ch)}% in ${mName(last.month)} vs ${mName(prev.month)}.`)}</div>`}</div>
-  <div class="card"><h2>${t('شلون تقلل استهلاكك', 'How to use less')}</h2>
-   ${topTips(3).map(x => `<div class="tip"><b class="small">${x.t}</b><div class="save"><span>${t('توفير', 'Saves')} ${x.pctLabel}</span><span class="kd">~${fmt(x.galMonth)}${G} ${t('بالشهر', '/month')}</span></div></div>`).join('')}
-   <button class="btn sec" style="margin-top:10px" onclick="go('tips')">${t('كل نصايح التوفير', 'All saving tips')}</button></div>`;
+     ? t(`زاد ${fmt(ch)}% عن ${mName(prev.month)}${ch >= 15 ? '. ممكن يكون فيه تسريب.' : '.'}`, `Up ${fmt(ch)}% on ${mName(prev.month)}${ch >= 15 ? '. There may be a leak.' : '.'}`)
+     : t(`وفّرت ${fmt(-ch)}% عن ${mName(prev.month)}.`, `You saved ${fmt(-ch)}% on ${mName(prev.month)}.`)}</div>`}
+   <div class="kpis"><div><span>${t('مجموع السنة', 'Year total')}</span><b>${fmt(tot)}</b></div><div><span>${t('المعدل الشهري', 'Monthly avg')}</span><b>${fmt(tot / yr.length)}</b></div><div><span>${t('أعلى شهر', 'Peak')}</span><b>${mName(top.month)}</b></div></div></div>
+  <div class="card"><div class="row between"><h2>${t('أكثر شي يوفر لك', 'Your top savings')}</h2><button class="link" style="margin:0" onclick="go('tips')">${t('الكل', 'All')}</button></div>
+   ${topTips(3).map(tipRow).join('')}</div>`;
 }
 
 /* ---------------- reading (photo or smart-meter chip) ---------------- */
@@ -204,7 +208,7 @@ function reading() {
    <label><input type="radio" name="rm" value="chip" ${readMode === 'chip' ? 'checked' : ''}><span>${t('عداد ذكي · شريحة', 'Smart meter · chip')}</span></label></div>`;
   if (readMode === 'photo') {
     $('#view').innerHTML = seg + `<div class="card"><h2>${t('صوّر العداد', 'Photograph the meter')}</h2>
-    <p class="muted small" style="margin-bottom:12px">${t('للبيوت اللي عدادها بدون شريحة. صوّر أرقام العداد بشكل واضح ومستقيم. القراءة بالقالون.', 'For homes without a chip. Take a clear, straight photo of the digits. Readings are in gallons.')}</p>
+    <p class="muted small" style="margin-bottom:12px">${t('صوّر أرقام العداد بشكل واضح. القراءة بالقالون.', 'Take a clear photo of the digits. Readings are in gallons.')}</p>
     <label class="drop" for="ph"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2F6FDB" stroke-width="1.8"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.5"/></svg>
     <div style="font-weight:600;margin-top:6px">${t('صوّر أو ارفع صورة', 'Take or upload a photo')}</div></label>
     <input id="ph" type="file" accept="image/*" capture="environment" class="hide">
@@ -221,14 +225,14 @@ function reading() {
   } else {
     const editing = !p.chip || reading.editChip;
     $('#view').innerHTML = seg + `<div class="card"><h2>${t('العداد الذكي', 'Smart meter')}</h2>
-    <p class="muted small">${t('للبيوت الجديدة اللي عدادها فيه شريحة إلكترونية. القراءة تنسحب من الشريحة بدون تصوير.', 'For new homes whose meter has an electronic chip. The reading is pulled from the chip, no photo needed.')}</p>
+    <p class="muted small">${t('القراءة تنسحب من الشريحة مباشرة.', 'The reading comes straight from the chip.')}</p>
     ${editing ? `<form id="cf" novalidate>${field('chip', t('رقم الشريحة الإلكترونية', 'Electronic chip number'), { value: p.chip || '', ph: t('مكتوب على العداد أو بفاتورة الوزارة', 'Printed on the meter or on your MEW bill'), attrs: 'dir="ltr" autocapitalize="characters"' })}
       <button class="btn" style="margin-top:12px">${t('احفظ رقم الشريحة', 'Save chip number')}</button>
       ${p.chip ? `<button type="button" class="link" onclick="reading.editChip=false;render()">${t('إلغاء', 'Cancel')}</button>` : ''}</form>`
     : `<div class="tierrow" style="margin-top:10px"><span>${t('رقم الشريحة', 'Chip number')}</span><b dir="ltr">${esc(p.chip)}</b></div>
       <button class="btn" id="pull" style="margin-top:12px">${t('اسحب القراءة من الشريحة', 'Get reading from chip')}</button>
       <button class="link" onclick="reading.editChip=true;render()">${t('تغيير رقم الشريحة', 'Change chip number')}</button>
-      <p class="tiny muted" style="margin-top:8px">${t('وضع تجريبي: القراءة محاكاة لين يتم الربط بنظام الوزارة.', 'Demo mode: the reading is simulated until linked to the Ministry system.')}</p>`}
+      <p class="tiny muted" style="margin-top:8px">${t('تجريبي: القراءة محاكاة.', 'Demo: reading is simulated.')}</p>`}
     <div id="res"></div></div>`;
     if (editing) $('#cf').onsubmit = e => {
       e.preventDefault(); clearErrs(); const c = val('chip').toUpperCase().replace(/\s+/g, '');
@@ -277,72 +281,77 @@ const SRC = {
   pressure: ['Bob Vila – Low-flush toilets', 'https://www.bobvila.com/articles/low-flush-toilets.md'],
   sensor: ['Sacramento State study (2016) / Alliance for Water Efficiency', 'https://www.csus.edu/experience/innovation-creativity/sustainability/_internal/_documents/ir-faucet.pdf']
 };
+const ICON = {
+  drop: '<path d="M12 3c-3 4.5-6 7.5-6 11a6 6 0 0 0 12 0c0-3.5-3-6.5-6-11z"/>',
+  shower: '<path d="M4 20V8a4 4 0 0 1 8 0"/><path d="M9 8h6"/><path d="M11 12v1M14 12v1M17 12v1M12.5 15v1M15.5 15v1"/>',
+  tap: '<path d="M4 10h10a3 3 0 0 1 3 3v2"/><path d="M8 10V6h4M10 6V4"/><path d="M17 19v1"/>',
+  toilet: '<path d="M6 4h8v6H6z"/><path d="M4 10h14a4 4 0 0 1-4 4l1 6H8l1-6a4 4 0 0 1-5-4z"/>',
+  leaf: '<path d="M5 19c0-8 6-14 15-14 0 9-6 15-14 15"/><path d="M5 19l8-8"/>',
+  timer: '<circle cx="12" cy="13" r="7"/><path d="M12 10v3l2 2M10 3h4"/>',
+  car: '<path d="M5 16V12l2-5h10l2 5v4"/><path d="M3 16h18"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/>',
+  wrench: '<path d="M14 6a4 4 0 0 0 5 5l-8 8a2 2 0 0 1-3-3l8-8a4 4 0 0 0-2-2z"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>'
+};
+for (const k in ICON) ICON[k] = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg>`;
 function tipList() {
   const p = S.profile, n = p.residents, Lday = {
     toilet: n * USE.flushes * USE.flushL, faucet: n * USE.faucetL, shower: n * USE.showerMin * USE.showerLpm,
     garden: p.garden ? (p.irrArea || 0) * USE.gardenLm2 : 0, car: p.carWash ? (p.cars || 0) * 4 * USE.washHoseL / 30 : 0
   };
   const T = [
-    { id: 'pressure', cat: t('أجهزة', 'Devices'), cost: 'high', on: true, base: 'toilet', pct: 50, pctLabel: '50%',
-      t: t('سيفون بضغط الهوا (Pressure-assisted)', 'Pressure-assisted toilet'),
-      d: t('السيفون العادي الحديث يصرف تقريباً ٦ لتر بالسحبة. السيفون اللي يشتغل بضغط الهوا يدفع الماي بقوة أكبر، وبعض موديلاته تصرف بحدود ٣ لتر بس (0.8 قالون أمريكي). صح إنه أغلى ويحتاج تبديل الكرسي كامل، بس يوفر نص ماي السيفون كل شهر.',
-        'A modern standard toilet uses about 6 L per flush. Pressure-assisted toilets push water with air pressure; some models use only about 3 L (0.8 US gal). It costs more and needs a full replacement, but it halves toilet water every month.'),
-      cmp: [[t('السيفون العادي', 'Standard'), t('٦ لتر', '6 L')], [t('بضغط الهوا', 'Pressure-assisted'), t('~٣ لتر', '~3 L')]], src: 'pressure' },
-    { id: 'sensor', cat: t('أجهزة', 'Devices'), cost: 'high', on: true, base: 'faucet', pct: 32, pctLabel: t('حتى 32–54%', 'up to 32–54%'),
-      t: t('حنفية سنسر مع مرشد تدفق قليل', 'Sensor tap with a low-flow aerator'),
-      d: t('الحنفية السنسر أغلى من العادية، بس تسكر الماي أول ما تشيل يدك. دراسة جامعة ساكرامنتو (2016) لقت توفير 32% مع مرشد 0.5 قالون/دقيقة و54% مع 0.35. تنبيه: دراسات ثانية لقت إن السنسر بدون مرشد ممكن يزيد الاستهلاك لأنه يشتغل بروحه، فلازم يكون معاه مرشد تدفق قليل.',
-        'Sensor taps cost more but stop the flow as soon as your hands move away. A Sacramento State study (2016) found 32% savings with a 0.5 gpm aerator and 54% with 0.35 gpm. Note: other studies found sensor taps without a low-flow aerator can increase use, so pair it with one.'),
-      src: 'sensor' },
-    { id: 'aerator', cat: t('أجهزة', 'Devices'), cost: 'low', on: true, base: 'faucet', pct: 30, pctLabel: '30%',
-      t: t('مرشد الحنفيات (Aerator)', 'Tap aerators'), d: t('قطعة رخيصة تنركب على الحنفية وتخلط الهوا بالماي. حسب برنامج WaterSense تقلل ماي المغاسل 30% بدون ما تحس بفرق.', 'A cheap screw-on part that mixes air into the stream. WaterSense says it cuts sink water use by 30% with no noticeable difference.'), src: 'epaFaucet' },
-    { id: 'shower', cat: t('أجهزة', 'Devices'), cost: 'low', on: true, base: 'shower', pct: 20, pctLabel: t('20% أو أكثر', '20% or more'),
-      t: t('دش موفر', 'Water-saving showerhead'), d: t('الدشات المعتمدة من WaterSense تصرف أقل بـ 20% على الأقل من الدش العادي وبنفس القوة.', 'WaterSense-labelled showerheads use at least 20% less water with the same spray.'), src: 'epaShower' },
-    { id: 'shorter', cat: t('عادات', 'Habits'), cost: 'free', on: true, base: 'shower', pct: 37.5, pctLabel: '37%',
-      t: t('قصّر الشاور من ٨ دقايق إلى ٥', 'Cut showers from 8 to 5 minutes'), d: t('كل دقيقة شاور تصرف تقريباً ٩.٥ لتر. ٣ دقايق أقل = توفير 37% من ماي الشاور.', 'Each shower minute uses about 9.5 L. Three minutes less saves 37% of shower water.'), calc: true },
-    { id: 'bag', cat: t('أجهزة', 'Devices'), cost: 'free', on: true, base: 'toilet', pct: 16, pctLabel: '16%',
-      t: t('بالون أو قنينة بخزان السيفون', 'Bottle or bag in the cistern'), d: t('قنينة لتر مليانة ماي داخل خزان السيفون تقلل كل سحبة لتر. مع سيفون ٦ لتر هذا توفير تقريباً 16%.', 'A filled 1 L bottle in the cistern saves 1 L per flush, about 16% on a 6 L toilet.'), calc: true },
-    { id: 'leak', cat: t('تسريب', 'Leaks'), cost: 'low', on: true, base: 'leak', pct: null, pctLabel: t('حتى 10% من الفاتورة', 'up to 10% of the bill'),
-      t: t('افحص السيفون وبدّل السدادة إذا تسرب', 'Check toilets and replace a leaking flapper'),
-      d: t('حط صبغة طعام بخزان السيفون وانتظر ١٥ دقيقة بدون سحب. إذا طلع لون بالكرسي، السدادة تسرب. حسب WaterSense تسريبات البيت المعتادة تهدر تقريباً 180 قالون أمريكي بالأسبوع.', 'Add food colouring to the cistern and wait 15 minutes without flushing. Colour in the bowl means the flapper leaks. WaterSense says typical household leaks waste about 180 US gallons a week.'), src: 'epaLeak' },
-    { id: 'drip', cat: t('الحديقة', 'Garden'), cost: 'mid', on: !!p.garden, base: 'garden', pct: 20, pctLabel: '20–50%',
-      t: t('ري بالتنقيط', 'Drip irrigation'), d: t('يوصل الماي للجذور مباشرة ويقلل التبخر بحر الكويت. يصرف أقل بـ 20 إلى 50% من الرشاشات (حسبنا التوفير على 20%).', 'Delivers water straight to the roots and cuts evaporation. Uses 20–50% less than sprinklers (savings calculated at 20%).'), src: 'epaIrr' },
-    { id: 'ctrl', cat: t('الحديقة', 'Garden'), cost: 'mid', on: !!p.garden, base: 'garden', pct: 30, pctLabel: t('حتى 30%', 'up to 30%'),
-      t: t('مؤقت ري ذكي', 'Smart irrigation controller'), d: t('يسقي حسب الطقس بدال الساعة الثابتة. حسب WaterSense يقلل ماي الري حتى 30%.', 'Waters by the weather instead of a fixed clock. WaterSense says it cuts irrigation water by up to 30%.'), src: 'epaCtrl' },
-    { id: 'car', cat: t('عادات', 'Habits'), cost: 'free', on: !!(p.carWash && p.cars), base: 'car', pct: 87, pctLabel: '87%',
-      t: t('اغسل السيارة بالسطل بدال الهوز', 'Wash the car with a bucket, not a hose'), d: t('الهوز المفتوح ١٥ دقيقة يصرف تقريباً ١٥٠ لتر. سطلين (٢٠ لتر) يكفون، يعني توفير تقريباً 87%.', 'A hose running 15 minutes uses about 150 L; two buckets (20 L) are enough, about 87% less.'), calc: true }
+    { id: 'pressure', cat: 'dev', icon: 'toilet', cost: 'high', on: true, base: 'toilet', pct: 50, pctLabel: '50%',
+      t: t('سيفون بضغط الهوا', 'Pressure-assisted toilet'), s: t('أغلى، بس يقص ماي السيفون للنص.', 'Pricier, but halves toilet water.'),
+      cmp: [[t('العادي', 'Standard'), t('٦ لتر', '6 L')], [t('بضغط الهوا', 'Pressure-assisted'), t('~٣ لتر', '~3 L')]], src: 'pressure' },
+    { id: 'sensor', cat: 'dev', icon: 'tap', cost: 'high', on: true, base: 'faucet', pct: 32, pctLabel: '32–54%',
+      t: t('حنفية سنسر + مرشد تدفق', 'Sensor tap + low-flow aerator'), s: t('تسكر الماي أول ما تشيل يدك.', 'Stops as soon as your hands move away.'),
+      note: t('بدون مرشد تدفق قليل ممكن تزيد الاستهلاك.', 'Without a low-flow aerator it can increase use.'), src: 'sensor' },
+    { id: 'aerator', cat: 'dev', icon: 'tap', cost: 'low', on: true, base: 'faucet', pct: 30, pctLabel: '30%',
+      t: t('مرشد الحنفية (Aerator)', 'Tap aerator'), s: t('قطعة رخيصة تخلط الهوا بالماي.', 'A cheap part that mixes air into the flow.'), src: 'epaFaucet' },
+    { id: 'shower', cat: 'dev', icon: 'shower', cost: 'low', on: true, base: 'shower', pct: 20, pctLabel: '20%+',
+      t: t('دش موفر', 'Water-saving showerhead'), s: t('نفس القوة بماي أقل.', 'Same spray, less water.'), src: 'epaShower' },
+    { id: 'shorter', cat: 'hab', icon: 'timer', cost: 'free', on: true, base: 'shower', pct: 37.5, pctLabel: '37%',
+      t: t('شاور ٥ دقايق بدال ٨', '5-minute showers instead of 8'), s: t('كل دقيقة ≈ ٩.٥ لتر.', 'Each minute ≈ 9.5 L.') },
+    { id: 'bag', cat: 'dev', icon: 'toilet', cost: 'free', on: true, base: 'toilet', pct: 16, pctLabel: '16%',
+      t: t('قنينة داخل خزان السيفون', 'Bottle in the cistern'), s: t('توفر لتر بكل سحبة.', 'Saves 1 L every flush.') },
+    { id: 'leak', cat: 'hab', icon: 'wrench', cost: 'low', on: true, base: 'leak', pct: null, pctLabel: t('حتى 10%', 'up to 10%'),
+      t: t('صلّح أي تسريب', 'Fix any leak'), s: t('التسريب الصغير يهدر وايد مع الوقت.', 'Small leaks waste a lot over time.'), src: 'epaLeak' },
+    { id: 'drip', cat: 'gar', icon: 'leaf', cost: 'mid', on: !!p.garden, base: 'garden', pct: 20, pctLabel: '20–50%',
+      t: t('ري بالتنقيط', 'Drip irrigation'), s: t('الماي يوصل للجذور مباشرة.', 'Water goes straight to the roots.'), src: 'epaIrr' },
+    { id: 'ctrl', cat: 'gar', icon: 'timer', cost: 'mid', on: !!p.garden, base: 'garden', pct: 30, pctLabel: t('حتى 30%', 'up to 30%'),
+      t: t('مؤقت ري ذكي', 'Smart irrigation timer'), s: t('يسقي حسب الطقس.', 'Waters by the weather.'), src: 'epaCtrl' },
+    { id: 'car', cat: 'hab', icon: 'car', cost: 'free', on: !!(p.carWash && p.cars), base: 'car', pct: 87, pctLabel: '87%',
+      t: t('غسيل السيارة بالسطل', 'Wash the car with a bucket'), s: t('٢٠ لتر بدال ١٥٠ لتر بالهوز.', '20 L instead of 150 L with a hose.') }
   ];
   const curUse = (() => { const fm = fullMonths(); return fm.length ? fm[fm.length - 1].use : expectedMonth(p, new Date().getMonth()); })();
   const rate = marginalRate(curUse);
   return T.filter(x => x.on).map(x => {
-    const lday = x.base === 'leak' ? 180 * 3.785 / 7 : Lday[x.base] * x.pct / 100;
-    const galMonth = lday * 30 / GAL;
-    return { ...x, galMonth, kdMonth: galMonth / 1000 * rate, ofTotal: galMonth / curUse * 100 };
-  });
+    const lday = x.base === 'leak' ? 180 * 3.785 / 7 : Lday[x.base] * x.pct / 100, galMonth = lday * 30 / GAL;
+    return { ...x, galMonth, kdMonth: galMonth / 1000 * rate };
+  }).sort((a, b) => b.galMonth - a.galMonth);
 }
-function topTips(n) { return tipList().sort((a, b) => b.galMonth - a.galMonth).slice(0, n); }
+function topTips(n) { return tipList().slice(0, n); }
+const COST = () => ({ free: t('مجاني', 'Free'), low: t('رخيص', 'Low cost'), mid: t('متوسط', 'Medium'), high: t('أغلى · يوفر على المدى البعيد', 'Pricier · pays back') });
+function tipRow(x) {
+  return `<details class="tipc"><summary><span class="ico">${ICON[x.icon]}</span><span class="grow"><b>${x.t}</b><small>~${fmt(x.galMonth)}${G} · ${fmt(x.kdMonth, 3)} ${t('د.ك', 'KD')} ${t('بالشهر', '/mo')}</small></span><span class="pctb">${x.pctLabel}</span></summary>
+   <div class="more"><p>${x.s}</p>${x.note ? `<p class="warn">${x.note}</p>` : ''}
+   ${x.cmp ? `<div class="cmp">${x.cmp.map(([a, b]) => `<div>${a}<b>${b}</b></div>`).join('')}</div>` : ''}
+   <div class="row between tiny muted" style="margin-top:8px"><span>${COST()[x.cost]}</span>${x.src ? `<a href="${SRC[x.src][1]}" target="_blank" rel="noopener">${t('المصدر', 'Source')}</a>` : `<span>${t('محسوبة', 'Calculated')}</span>`}</div></div></details>`;
+}
+let tipFilter = 'all';
 function tips() {
-  const fm = fullMonths(), last = fm[fm.length - 1], use = last ? last.use : 0, ti = last ? tierOf(use) : -1;
-  const costL = { free: t('مجاني', 'Free'), low: t('رخيص', 'Low cost'), mid: t('تكلفة متوسطة', 'Medium cost'), high: t('أغلى، بس يوفر على المدى البعيد', 'Pricier, pays back over time') };
-  const left = last && ti === 0 ? 30000 - use : null;
+  const fm = fullMonths(), last = fm[fm.length - 1], use = last ? last.use : 0, max = 60000, pos = Math.min(100, use / max * 100);
+  const cats = [['all', t('الكل', 'All')], ['dev', t('أجهزة', 'Devices')], ['hab', t('عادات', 'Habits')], ['gar', t('الحديقة', 'Garden')]].filter(([k]) => k !== 'gar' || S.profile.garden);
+  const list = tipList().filter(x => tipFilter === 'all' || x.cat === tipFilter), total = tipList().reduce((a, x) => a + x.galMonth, 0);
   $('#view').innerHTML = `
-  <div class="card"><h2>${t('سعر الماي الطبيعي', 'Normal water price')}</h2>
-   <p class="small muted">${t('حسب تعرفة وزارة الكهرباء والماء، لكل ١٠٠٠ قالون بالشهر:', 'Ministry of Electricity and Water tariff, per 1,000 gallons a month:')}</p>
-   ${TIERS.slice(0, 3).map((tr, i) => `<div class="tierrow ${i === ti || (ti === 3 && i === 2) ? 'on' : ''}"><span>${fmt(tr.from)} – ${fmt(tr.to)}${G}</span><b>${tr.rate.toFixed(3)} ${t('د.ك', 'KD')}</b></div>`).join('')}
-   ${last ? `<p class="small" style="margin-top:10px">${t(`استهلاكك في ${mName(last.month)}: <b>${fmt(use)} قالون</b>، وفاتورته التقديرية <b>${fmt(bill(use), 3)} د.ك</b>.`, `Your ${mName(last.month)} use: <b>${fmt(use)} gal</b>, estimated bill <b>${fmt(bill(use), 3)} KD</b>.`)}</p>
-    ${left != null ? `<div class="alert green" style="margin-top:8px">${t(`باقي لك ${fmt(left)} قالون قبل ما تدخل الشريحة الثانية (١.٧٠٠ د.ك).`, `${fmt(left)} gallons left before the second tier (1.700 KD).`)}</div>` : `<div class="alert amber" style="margin-top:8px">${t('تعديت السعر الطبيعي. التوفير تحت يرجعك للشريحة الأولى.', 'You are above the normal price. The tips below can bring you back to the first tier.')}</div>`}` : ''}
-   <p class="tiny muted" style="margin-top:8px">${t('السعر يزيد مع الاستهلاك عشان يكون فيه عدل بين البيوت: البيت اللي عنده مسبح أو حديقة كبيرة يستهلك أكثر ويدفع أكثر. الحساب بالشرايح: كل جزء من الاستهلاك يتحاسب بسعر شريحته.', 'The price rises with use for fairness: homes with a pool or large garden use more and pay more. Billing is tiered: each part of your use is charged at its own tier price.')}</p></div>
-  <div class="card"><h2>${t('نصايح التوفير لبيتك', 'Saving tips for your home')}</h2>
-   <p class="tiny muted">${t('مرتبة من الأكثر توفير لبيتك. التوفير بالقالون والدينار محسوب على عدد سكان بيتك وسعر شريحتك.', 'Ordered by how much they save your home. Gallons and KD are calculated for your household size and tier.')}</p>
-   ${tipList().sort((a, b) => b.galMonth - a.galMonth).map(x => `<div class="tip">
-    <div class="row between"><b class="small">${x.t}</b><span class="tag">${x.cat}</span></div>
-    <div class="small muted" style="margin:4px 0">${x.d}</div>
-    ${x.cmp ? `<div class="cmp">${x.cmp.map(([a, b]) => `<div>${a}<b>${b}</b></div>`).join('')}</div>` : ''}
-    <div class="save"><span>${t('نسبة التوفير', 'Saving')}: ${x.pctLabel}</span><span class="kd">~${fmt(x.galMonth)}${G} ${t('بالشهر', '/month')}</span><span class="kd">~${fmt(x.kdMonth, 3)} ${t('د.ك بالشهر', 'KD/month')}</span></div>
-    <div class="tiny muted" style="margin-top:4px">${costL[x.cost]}</div>
-    ${x.src ? `<div class="src">${t('المصدر', 'Source')}: <a href="${SRC[x.src][1]}" target="_blank" rel="noopener">${SRC[x.src][0]}</a></div>` : `<div class="src">${t('محسوبة من الأرقام المذكورة.', 'Calculated from the figures stated.')}</div>`}
-   </div>`).join('')}
-   <p class="tiny muted" style="margin-top:10px">${t(`افتراضات الحساب للشخص باليوم: ${USE.flushes} سحبات سيفون × ${USE.flushL} لتر، ${USE.faucetL} لتر مغاسل، شاور ${USE.showerMin} دقايق × ${USE.showerLpm} لتر، والحديقة ${USE.gardenLm2} لتر/م². القالون = ${GAL} لتر.`,
-     `Assumptions per person per day: ${USE.flushes} flushes × ${USE.flushL} L, ${USE.faucetL} L at sinks, ${USE.showerMin}-minute shower × ${USE.showerLpm} L, garden ${USE.gardenLm2} L/m². 1 gallon = ${GAL} L.`)}</p></div>`;
+  <div class="card"><div class="row between"><h2>${t('التعرفة المقترحة', 'Proposed tariff')}</h2><span class="tag">${t('دراسة مستقبلية', 'Future study')}</span></div>
+   <div class="tierbar" dir="ltr"><i style="width:50%"></i><i style="width:25%"></i><i style="width:25%"></i>${last ? `<em style="left:${pos}%"></em>` : ''}</div>
+   <div class="tierlbl" dir="ltr"><span>0</span><span style="left:50%">30k</span><span style="left:75%">45k</span><span style="right:0">60k</span></div>
+   <div class="tiers3" dir="ltr">${TIERS.slice(0, 3).map((tr, i) => `<div class="${last && Math.min(2, tierOf(use)) === i ? 'on' : ''}"><b>${tr.rate.toFixed(3)}</b><span>${t('د.ك / ١٠٠٠ قالون', 'KD / 1,000 gal')}</span></div>`).join('')}</div>
+   ${last ? `<div class="kpis"><div><span>${mName(last.month)}</span><b>${fmt(use)}</b></div><div><span>${t('الفاتورة', 'Bill')}</span><b>${fmt(bill(use), 3)}</b></div><div><span>${t('للشريحة الجاية', 'To next tier')}</span><b>${use < 60000 ? fmt(TIERS[tierOf(use)].to - use) : '—'}</b></div></div>` : ''}</div>
+  <div class="card"><div class="row between"><h2>${t('نصايح التوفير', 'Saving tips')}</h2><span class="tiny muted">${t('توفير يوصل', 'up to')} ~${fmt(total)}${G}/${t('شهر', 'mo')}</span></div>
+   <div class="filters">${cats.map(([k, l]) => `<button class="${tipFilter === k ? 'on' : ''}" onclick="tipFilter='${k}';tips()">${l}</button>`).join('')}</div>
+   ${list.map(tipRow).join('')}
+   <details class="how"><summary>${t('شلون حسبنا التوفير؟', 'How we calculate savings')}</summary><p class="tiny muted">${t(`للشخص باليوم: ${USE.flushes} سحبات × ${USE.flushL} لتر، ${USE.faucetL} لتر مغاسل، شاور ${USE.showerMin} دقايق × ${USE.showerLpm} لتر، الحديقة ${USE.gardenLm2} لتر/م². القالون = ${GAL} لتر.`, `Per person per day: ${USE.flushes} flushes × ${USE.flushL} L, ${USE.faucetL} L at sinks, ${USE.showerMin}-min shower × ${USE.showerLpm} L, garden ${USE.gardenLm2} L/m². 1 gal = ${GAL} L.`)}</p></details></div>`;
 }
 
 function history() {
